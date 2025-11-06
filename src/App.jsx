@@ -11,7 +11,7 @@ import Home from "./Pages/Home";
 import Products from "./Pages/Products";
 import ProductDetail from "./Pages/ProductDetails";
 import Cart from "./Pages/Cart";
-import Checkout from "./Pages/Chcekout";
+import Checkout from "./Pages/Checkout";
 import Orders from "./Pages/Orders";
 import Profile from "./Pages/Profile";
 import Contact from "./Pages/Contact";
