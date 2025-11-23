@@ -1,6 +1,7 @@
+// src/pages/Orders.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -10,21 +11,20 @@ const Orders = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!token || !user?._id) {
       navigate("/login");
       return;
     }
 
     const fetchOrders = async () => {
       try {
-        const res = await axios.get(
-          "https://swadbackendserver.onrender.com/api/orders/user",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await API.get(`/api/orders/user/${user._id}`);
         setOrders(res.data || []);
       } catch (err) {
         console.error(err);
-        setError("Failed to load your orders. Try again later.");
+        setError("Failed to load your orders.");
       } finally {
         setLoading(false);
       }
@@ -58,7 +58,7 @@ const Orders = () => {
 
         {!loading && orders.length === 0 && (
           <div className="text-center">
-            <p className="text-gray-600 mb-4">You haven’t placed any orders yet.</p>
+            <p className="text-gray-600 mb-4">You haven't placed any orders yet.</p>
             <Link
               to="/products"
               className="bg-orange-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-orange-600"
@@ -99,26 +99,26 @@ const Orders = () => {
                 <div className="space-y-3 border-t border-gray-200 pt-3">
                   {order.products.map((item) => (
                     <div
-                      key={item.product._id}
+                      key={item.product?._id}
                       className="flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
                         <img
-                          src={item.product.image}
-                          alt={item.product.name}
+                          src={item.product?.image}
+                          alt={item.product?.name}
                           className="w-16 h-16 object-cover rounded-lg border"
                         />
                         <div>
                           <p className="font-medium text-gray-800">
-                            {item.product.name}
+                            {item.product?.name}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {item.quantity} × ₹{item.product.price}
+                            {item.quantity} × ₹{item.product?.price}
                           </p>
                         </div>
                       </div>
                       <p className="font-semibold text-gray-700">
-                        ₹{item.quantity * item.product.price}
+                        ₹{item.quantity * item.product?.price}
                       </p>
                     </div>
                   ))}
@@ -136,6 +136,16 @@ const Orders = () => {
                     </span>
                   </p>
                 </div>
+
+                {/* Pay Now for pending orders */}
+                {order.paymentStatus === "pending" && (
+                  <button
+                    onClick={() => navigate(`/paynow/${order._id}`)}
+                    className="mt-4 bg-orange-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-orange-600 w-full md:w-auto"
+                  >
+                    Pay Now
+                  </button>
+                )}
               </div>
             ))}
           </div>

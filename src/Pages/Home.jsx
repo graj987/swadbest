@@ -26,7 +26,7 @@ const Home = () => {
   return (
     <div className="bg-orange-50 min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-[80vh] flex items-center justify-center bg-[url('/images/hero.jpg')] bg-cover bg-center">
+      <section className="relative h-[80vh] flex items-center justify-center bg-[url('src/assets/homebackgroud.jpg')] bg-cover bg-center">
         <div className="absolute inset-0 bg-black/50"></div>
         <div className="relative z-10 text-center px-6">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">

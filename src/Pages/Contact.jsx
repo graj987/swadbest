@@ -134,7 +134,7 @@ const Contact = () => {
               12/4, Near MG Road, Patna, Bihar, India
             </p>
             <p className="text-gray-700 mb-3">
-              📞 <strong>Phone:</strong> +91 98765 43210
+              📞 <strong>Phone:</strong> +91 87093 97655
             </p>
             <p className="text-gray-700 mb-3">
               ✉️ <strong>Email:</strong> support@swadbest.com
@@ -145,7 +145,7 @@ const Contact = () => {
               </p>
               <div className="flex gap-3">
                 <a
-                  href="https://wa.me/919876543210"
+                  href="https://wa.me/918709397655"
                   target="_blank"
                   className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 text-sm"
                 >
