@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,8 +19,8 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await axios.post(
-        "https://swadbackendserver.onrender.com/api/users/login",
+      const res = await API.post(
+        "api/users/login",
         formData
       );
 

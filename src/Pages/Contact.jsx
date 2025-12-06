@@ -1,6 +1,6 @@
 import React from "react";
 import { useState } from "react";
-import axios from "axios";
+import API from "../api";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -21,8 +21,8 @@ const Contact = () => {
     setLoading(true);
 
     try {
-      const res = await axios.post(
-        "https://swadbackendserver.onrender.com/api/users/contact",
+      const res = await API.post(
+        "api/users/contact",
         formData
       );
 

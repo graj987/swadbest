@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -14,8 +14,8 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(
-          `https://swadbackendserver.onrender.com/api/products/${id}`
+        const res = await API.get(
+          `api/products/${id}`
         );
         setProduct(res.data);
       } catch (err) {

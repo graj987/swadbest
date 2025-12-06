@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -20,36 +20,64 @@ const Register = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  e.preventDefault();
+  setError("");
+  setSuccess("");
 
-    const { name, email, password, confirmPassword } = formData;
+  // normalize client-side
+  const name = String(formData.name || "").trim();
+  const email = String(formData.email || "").trim().toLowerCase();
+  const password = String(formData.password || "");
+  const confirmPassword = String(formData.confirmPassword || "");
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match!");
-      return;
+  // quick client-side validation
+  if (!name || !email || !password || !confirmPassword) {
+    setError("Please fill all fields.");
+    return;
+  }
+  if (password !== confirmPassword) {
+    setError("Passwords do not match!");
+    return;
+  }
+  if (password.length < 8) {
+    setError("Password should be at least 8 characters.");
+    return;
+  }
+  // basic email regex (not perfect but useful client-side)
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRe.test(email)) {
+    setError("Please enter a valid email address.");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    // send a clean payload (no confirmPassword)
+    const payload = { name, email, password: password.trim() };
+
+    const res = await API.post("/api/users/register", payload);
+
+    if (res.status === 201) {
+      setSuccess("Registration successful! Redirecting to login...");
+      // small delay so user sees success
+      setTimeout(() => navigate("/login"), 1500);
+    } else {
+      // handle unexpected 2xx response shapes
+      setSuccess("Registration completed. Redirecting...");
+      setTimeout(() => navigate("/login"), 1500);
     }
+  } catch (err) {
+    console.error("Register error:", err?.response?.data || err);
+    // Prefer server-provided friendly message; fallback to generic text
+    const serverMsg = err.response?.data?.message;
+    if (serverMsg) setError(String(serverMsg));
+    else if (err.response) setError(`Registration failed: ${err.response.status}`);
+    else setError("Registration failed. Check your network and try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-    setLoading(true);
-    try {
-      const res = await axios.post(
-        "https://swadbackendserver.onrender.com/api/users/register",
-        { name, email, password }
-      );
-
-      if (res.status === 201) {
-        setSuccess("Registration successful! Redirecting to login...");
-        setTimeout(() => navigate("/login"), 2000);
-      }
-    } catch (err) {
-      if (err.response?.data?.message)
-        setError(err.response.data.message);
-      else setError("Registration failed. Try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-orange-50 px-4">

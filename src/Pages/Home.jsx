@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 
 const Home = () => {
   const [featured, setFeatured] = useState([]);
@@ -10,8 +10,8 @@ const Home = () => {
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        const res = await axios.get(
-          "https://swadbackendserver.onrender.com/api/products?featured=true"
+        const res = await API.get(
+          "api/products?featured=true"
         );
         setFeatured(res.data || []);
       } catch (error) {

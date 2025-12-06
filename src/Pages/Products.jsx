@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 import ProductCard from "../Components/ProductCard";
 import Loader from "../Components/Loader";
 
@@ -25,7 +25,7 @@ const Products = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("https://swadbackendserver.onrender.com/api/products");
+        const res = await API.get("api/products");
         setProducts(res.data);
         setFiltered(res.data);
       } catch (err) {
