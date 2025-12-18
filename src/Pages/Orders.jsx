@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "@/api";
 import SafeImage from "@/Components/SafeImage";
-import useAuth from "@/hooks/useAuth";
+import useAuth from "/hooks/useAuth";
 
 const Orders = () => {
   const navigate = useNavigate();

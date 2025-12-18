@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "@/api";
-import useAuth from "@/hooks/useAuth";
+import useAuth from "/hooks/useAuth";
 
 const isValidCartItem = (item) =>
   item &&

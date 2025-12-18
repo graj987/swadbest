@@ -13,7 +13,7 @@ import Footer from "./Components/Footer";
 import Loader from "./Components/Loader";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import AuthProvider from "./context/AuthProvider";
-import useAuth from "./hooks/useAuth";
+import useAuth from "./Hooks/useAuth";
 
 // Pages
 import Home from "./Pages/Home";
