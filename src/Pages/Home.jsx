@@ -1,7 +1,9 @@
-import React from "react";
-import { useEffect, useState } from "react";
+// src/pages/Home.jsx
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import API from "../api";
+import SafeImage from "@/Components/SafeImage";
+import API from "@/api";
+
 
 const Home = () => {
   const [featured, setFeatured] = useState([]);
@@ -10,10 +12,8 @@ const Home = () => {
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        const res = await API.get(
-          "api/products?featured=true"
-        );
-        setFeatured(res.data || []);
+        const res = await API.get("/api/products?featured=true");
+        setFeatured(Array.isArray(res.data) ? res.data : []);
       } catch (error) {
         console.error("Error loading featured products:", error);
       } finally {
@@ -24,32 +24,170 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="bg-orange-50 min-h-screen">
-      {/* Hero Section */}
-      <section className="relative h-[80vh] flex items-center justify-center bg-[url('src/assets/homebackgroud.jpg')] bg-cover bg-center">
-        <div className="absolute inset-0 bg-black/50"></div>
-        <div className="relative z-10 text-center px-6">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
-            Taste the Tradition with <span className="text-orange-400">SwadBest</span>
-          </h1>
-          <p className="text-gray-200 mb-6 text-lg">
-            Pure. Authentic. Homemade Flavours — from our kitchen to your home.
-          </p>
-          <Link
-            to="/products"
-            className="bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
-          >
-            Shop Now
-          </Link>
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      {/* ================= TOP HERO ================= */}
+      <section className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-8 grid md:grid-cols-2 gap-8 items-center">
+
+          {/* Left Content */}
+          <div className="space-y-5">
+            <span className="text-orange-500 font-semibold text-sm">
+              #SwadBest Special
+            </span>
+
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
+              Limited Time Offer!
+              <span className="block text-orange-500">
+                Authentic Homemade Taste
+              </span>
+            </h1>
+
+            <p className="text-gray-600 text-lg">
+              Freshly prepared masala, pickles & snacks made with love.
+            </p>
+          </div>
+
+          {/* Right Product Visual */}
+          <div className="relative flex justify-center">
+            <SafeImage
+              src="/images/pickle.jpg"
+              alt="Featured product"
+              className="w-[90%] max-w-md rounded-2xl shadow-xl"
+            />
+          </div>
+        </div>
+      </section>
+      {/* ================= CATEGORY STRIP ================= */}
+      <section className="bg-white py-6">
+        <div className="max-w-7xl mx-auto px-4 flex gap-6 overflow-x-auto justify-between">
+          {[
+            { name: "Masala", img: "/images/masala.jpg" },
+            { name: "Snacks", img: "/images/snacks.jpg" },
+            { name: "Pickles", img: "/images/pickle.jpg" },
+            { name: "Instant Mix", img: "/images/mix.jpg" },
+          ].map((cat) => (
+            <Link
+              key={cat.name}
+              to={`/products?category=${cat.name.toLowerCase()}`}
+              className="flex flex-col items-center gap-2 min-w-[80px]"
+            >
+              <div className="h-16 w-16 rounded-full bg-gray-100 shadow-sm flex items-center justify-center overflow-hidden">
+                <SafeImage
+                  src={cat.img}
+                  alt={cat.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <span className="text-sm font-medium text-gray-700">
+                {cat.name}
+              </span>
+            </Link>
+          ))}
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="py-12 px-4 md:px-12 bg-white">
-        <h2 className="text-2xl font-bold text-center text-orange-600 mb-8">
-          Explore Our Categories
+
+
+      {/* ================= FEATURED ================= */}
+      <section className="py-10 px-4 bg-orange-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-gray-800">
+              Featured Products
+            </h2>
+            <Link
+              to="/products"
+              className="text-orange-600 font-semibold hover:underline"
+            >
+              View All →
+            </Link>
+          </div>
+
+          {loading ? (
+            <p className="text-center text-gray-500">Loading...</p>
+          ) : featured.length === 0 ? (
+            <p className="text-center text-gray-500">
+              No featured products available.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {featured.map((item) => (
+                <div
+                  key={item._id}
+                  className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1"
+                >
+                  <SafeImage
+                    src={item.image}
+                    alt={item.name}
+                    className="h-40 w-full object-cover rounded-t-2xl"
+                  />
+
+
+                  <div className="p-3 space-y-1">
+                    <h3 className="font-semibold text-gray-800 line-clamp-1">
+                      {item.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {item.category}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-orange-600 font-bold">
+                        ₹{item.price}
+                      </span>
+                      <Link
+                        to={`/products/${item._id}`}
+                        className="text-sm font-semibold text-orange-600 hover:underline"
+                      >
+                        View
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ================= BRAND SLIDER ================= */}
+      <section className="py-14 bg-orange-100">
+        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-orange-700">
+              The SwadBest Promise
+            </h2>
+            <p className="text-gray-700 text-lg">
+              Every product is handcrafted using time-tested recipes,
+              premium ingredients, and absolute hygiene.
+            </p>
+            <Link
+              to="/products"
+              className="inline-block mt-4 bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+            >
+              Explore Products
+            </Link>
+          </div>
+
+          {/* Image slider feel */}
+          <div className="relative overflow-hidden rounded-2xl shadow-xl">
+            <SafeImage
+              src="/images/pickle.jpg"
+              alt="Brand showcase"
+              className="h-72 w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/20" />
+          </div>
+        </div>
+      </section>
+
+      {/* ================= CATEGORIES ================= */}
+      <section className="py-14 px-4">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-10">
+          Shop by Category
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
+
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
             { name: "Masala", image: "/images/masala.jpg" },
             { name: "Snacks", image: "/images/snacks.jpg" },
@@ -59,12 +197,12 @@ const Home = () => {
             <Link
               key={cat.name}
               to={`/products?category=${cat.name.toLowerCase()}`}
-              className="group relative overflow-hidden rounded-xl shadow hover:shadow-lg transition"
+              className="group relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition"
             >
-              <img
+              <SafeImage
                 src={cat.image}
                 alt={cat.name}
-                className="w-full h-40 object-cover transform group-hover:scale-110 transition duration-300"
+                className="h-40 w-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                 <h3 className="text-white text-lg font-semibold">
@@ -76,70 +214,32 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-12 px-4 md:px-12">
-        <h2 className="text-2xl font-bold text-center text-orange-600 mb-8">
-          Featured Products
-        </h2>
+      {/* ================= CTA ================= */}
+    <section className="relative overflow-hidden py-20 text-white">
+  {/* Background */}
+  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500" />
+  <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_30%,white,transparent_60%)]" />
 
-        {loading ? (
-          <p className="text-center text-gray-600">Loading products...</p>
-        ) : featured.length === 0 ? (
-          <p className="text-center text-gray-600">
-            No featured products available.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {featured.map((item) => (
-              <div
-                key={item._id}
-                className="bg-white rounded-xl shadow-md hover:shadow-lg transition border border-orange-100"
-              >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="h-48 w-full object-cover rounded-t-xl"
-                />
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-800">{item.name}</h3>
-                  <p className="text-sm text-gray-500 mt-1">{item.category}</p>
-                  <p className="text-orange-600 font-bold mt-2">₹{item.price}</p>
-                  <Link
-                    to={`/products/${item._id}`}
-                    className="mt-3 inline-block bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition"
-                  >
-                    View
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+  {/* Content */}
+  <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
+    <h2 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+      Ready to Taste <span className="text-yellow-200">Real India?</span>
+    </h2>
 
-      {/* About / Brand Section */}
-      <section className="bg-orange-100 py-12 px-6 text-center">
-        <h2 className="text-2xl font-bold text-orange-700 mb-3">
-          Why Choose SwadBest?
-        </h2>
-        <p className="max-w-3xl mx-auto text-gray-700 text-lg">
-          SwadBest brings you the authentic homemade taste you’ve always loved.  
-          Every product is crafted with pure ingredients, no harmful preservatives,  
-          and packed with care — because your health deserves the best flavor.
-        </p>
-      </section>
+    <p className="text-lg md:text-xl text-orange-100 mb-8">
+      Handcrafted flavors • Traditional recipes • Delivered fresh to your home
+    </p>
 
-      {/* CTA Footer */}
-      <section className="py-12 bg-orange-500 text-white text-center">
-        <h2 className="text-3xl font-bold mb-4">Order Once, Love Forever</h2>
-        <p className="mb-6">Experience the real taste of India’s best homemade masalas & snacks.</p>
-        <Link
-          to="/products"
-          className="bg-white text-orange-600 font-semibold px-6 py-3 rounded-lg hover:bg-orange-100 transition"
-        >
-          Start Shopping
-        </Link>
-      </section>
+    <Link
+      to="/products"
+      className="inline-flex items-center gap-2 bg-white text-orange-600 font-semibold px-10 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-transform duration-300"
+    >
+      Start Shopping
+      <span className="text-xl">→</span>
+    </Link>
+  </div>
+</section>
+
     </div>
   );
 };

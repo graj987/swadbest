@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api";
+import SafeImage from "../Components/SafeImage";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -65,7 +66,7 @@ const ProductDetail = () => {
       <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-md p-6 md:p-10 border border-orange-100 grid md:grid-cols-2 gap-10">
         {/* Product Image */}
         <div className="flex justify-center items-center">
-          <img
+          <SafeImage
             src={product.image}
             alt={product.name}
             className="rounded-xl w-full max-w-md h-auto object-cover shadow-sm"
@@ -122,15 +123,14 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* Related Products Section (Optional for later) */}
-      {/* <div className="max-w-6xl mx-auto mt-12">
+       <div className="max-w-6xl mx-auto mt-12">
         <h3 className="text-xl font-bold text-orange-700 mb-4">
           You May Also Like
         </h3>
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           // Map your related products here
         </div>
-      </div> */}
+      </div> 
     </div>
   );
 };

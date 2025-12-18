@@ -1,15 +1,33 @@
+// src/components/ProtectedRoute.jsx
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import useAuth from "@/hooks/useAuth";
 
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem("token");
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
-  // If token not found, redirect to login
-  if (!token) {
-    return <Navigate to="/login" replace />;
+  // ⏳ wait until auth state is restored
+  if (loading) {
+    return (
+      <div className="w-full flex justify-center py-20 text-lg font-semibold text-gray-600">
+        Loading...
+      </div>
+    );
   }
 
-  // If logged in, allow access
+  // ❌ not authenticated → redirect to login
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location }}
+      />
+    );
+  }
+
+  // ✅ authenticated → render protected content
   return children;
 };
 

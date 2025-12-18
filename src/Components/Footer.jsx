@@ -3,75 +3,106 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-orange-600 text-white py-10 px-6 mt-10">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-        
-        {/* Brand Info */}
-        <div>
-          <h3 className="text-2xl font-bold mb-3">SwadBest</h3>
-          <p className="text-sm text-orange-100 leading-relaxed">
-            Bringing the authentic homemade taste of India straight to your kitchen.
-            Pure, flavorful, and made with love — just like home.
+    <footer className="bg-[#111827] text-gray-300 pt-14">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
+
+        {/* Brand */}
+        <div className="space-y-4">
+          <h3 className="text-2xl font-bold text-white">
+            SwadBest
+          </h3>
+          <p className="text-sm leading-relaxed text-gray-400">
+            SwadBest Private Limited delivers authentic homemade Indian food
+            prepared with traditional recipes, pure ingredients, and uncompromising hygiene.
+          </p>
+          <p className="text-sm text-gray-500">
+            Eat clean. Eat traditional. Eat SwadBest.
           </p>
         </div>
 
         {/* Quick Links */}
         <div>
-          <h4 className="text-lg font-semibold mb-3">Quick Links</h4>
-          <ul className="space-y-2 text-sm text-orange-100">
-            <li><Link to="/" className="hover:text-white transition">Home</Link></li>
-            <li><Link to="/products" className="hover:text-white transition">Products</Link></li>
-            <li><Link to="/orders" className="hover:text-white transition">My Orders</Link></li>
-            <li><Link to="/profile" className="hover:text-white transition">My Profile</Link></li>
-            <li><Link to="/contact" className="hover:text-white transition">Contact Us</Link></li>
+          <h4 className="text-lg font-semibold text-white mb-4">
+            Quick Links
+          </h4>
+          <ul className="space-y-2 text-sm">
+            <li><Link to="/" className="hover:text-orange-400 transition">Home</Link></li>
+            <li><Link to="/products" className="hover:text-orange-400 transition">Products</Link></li>
+            <li><Link to="/orders" className="hover:text-orange-400 transition">My Orders</Link></li>
+            <li><Link to="/profile" className="hover:text-orange-400 transition">My Profile</Link></li>
+            <li><Link to="/contact" className="hover:text-orange-400 transition">Contact Us</Link></li>
           </ul>
         </div>
 
-        {/* Contact Info */}
+        {/* Company & Policies */}
         <div>
-          <h4 className="text-lg font-semibold mb-3">Contact Info</h4>
-          <ul className="space-y-2 text-sm text-orange-100">
-            <li>📍 Patna, Bihar, India</li>
-            <li>📞 +91 98765 43210</li>
+          <h4 className="text-lg font-semibold text-white mb-4">
+            Company
+          </h4>
+          <ul className="space-y-2 text-sm">
+            <li>About SwadBest</li>
+            <li>Privacy Policy</li>
+            <li>Terms & Conditions</li>
+            <li>Shipping & Delivery</li>
+            <li>Refund & Cancellation</li>
+          </ul>
+        </div>
+
+        {/* Contact */}
+        <div>
+          <h4 className="text-lg font-semibold text-white mb-4">
+            Contact Information
+          </h4>
+          <ul className="space-y-3 text-sm text-gray-400">
+            <li>
+              📍 Bharpura, Sonpur,<br />
+              Saran, Bihar – 841101
+            </li>
+            <li>📞 +91 8709397655</li>
             <li>✉️ support@swadbest.com</li>
           </ul>
-        </div>
 
-        {/* Follow Us */}
-        <div>
-          <h4 className="text-lg font-semibold mb-3">Follow Us</h4>
-          <div className="flex space-x-3">
+          {/* Social Icons */}
+          <div className="flex gap-4 mt-5">
             <a
-              href="https://www.facebook.com"
+              href="https://www.facebook.com/swadbest"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition"
+              className="h-9 w-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-orange-500 transition"
             >
-              <i className="fab fa-facebook-f"></i>
+              <svg className="h-4 w-4 fill-white" viewBox="0 0 24 24">
+                <path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9v-2.9h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.3.2 2.3.2v2.5h-1.3c-1.3 0-1.7.8-1.7 1.6v1.9h2.9l-.5 2.9h-2.4v7A10 10 0 0 0 22 12"/>
+              </svg>
             </a>
+
             <a
-              href="https://www.instagram.com"
+              href="https://www.instagram.com/swadbest"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition"
+              className="h-9 w-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-orange-500 transition"
             >
-              <i className="fab fa-instagram"></i>
+              <svg className="h-4 w-4 fill-white" viewBox="0 0 24 24">
+                <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm6.5-.9a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2z"/>
+              </svg>
             </a>
+
             <a
-              href="https://wa.me/919876543210"
+              href="https://wa.me/918709397655"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition"
+              className="h-9 w-9 flex items-center justify-center rounded-full bg-gray-800 hover:bg-orange-500 transition"
             >
-              <i className="fab fa-whatsapp"></i>
+              <svg className="h-4 w-4 fill-white" viewBox="0 0 24 24">
+                <path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.9-1.3A10 10 0 1 0 12 2zm5.2 14.6c-.2.6-1.1 1.1-1.7 1.2-.5.1-1.2.1-3.8-1.6-3.2-1.9-5.2-5.2-5.4-5.5-.2-.3-1.3-1.7-1.3-3.2 0-1.5.8-2.3 1.1-2.6.3-.3.7-.4 1-.4h.7c.2 0 .5-.1.8.6.3.7 1 2.5 1.1 2.7.1.2.1.4 0 .6-.1.2-.2.4-.4.6-.2.2-.4.4-.6.6-.2.2-.4.4-.2.8.2.4 1 1.7 2.1 2.7 1.5 1.3 2.7 1.7 3.1 1.9.4.2.7.2 1 0 .3-.2 1.2-1.4 1.5-1.9.3-.5.6-.4 1-.3.4.1 2.5 1.2 2.9 1.4.4.2.7.3.8.4.1.1.1.6-.1 1.2z"/>
+              </svg>
             </a>
           </div>
         </div>
       </div>
 
-      {/* Bottom Line */}
-      <div className="border-t border-white/20 mt-8 pt-4 text-center text-sm text-orange-100">
-        © {new Date().getFullYear()} <span className="font-semibold">SwadBest Foods</span>. All Rights Reserved.
+      {/* Bottom */}
+      <div className="border-t border-gray-800 mt-12 py-5 text-center text-sm text-gray-500">
+        © {new Date().getFullYear()} <span className="text-white font-semibold">SwadBest Private Limited</span>. All rights reserved.
       </div>
     </footer>
   );
