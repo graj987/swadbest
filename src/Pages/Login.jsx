@@ -7,7 +7,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { CardContent, Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import API from "@/api";
-import { useAuth } from "@/Hooks/useAuth";
+import useAuth  from "../Hooks/useAuth";
 
 export default function Login() {
   const navigate = useNavigate();

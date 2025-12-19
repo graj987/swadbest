@@ -1,7 +1,7 @@
 // src/pages/Cart.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import useAuth from "/hooks/useAuth";
+import useAuth from "@/Hooks/useAuth";
 
 const isValidCartItem = (item) =>
   item &&

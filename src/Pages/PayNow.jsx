@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "@/api";
-import useAuth from "@/hooks/useAuth";
+import useAuth from "../Hooks/useAuth";
 
 const formatCurrency = (v) =>
   new Intl.NumberFormat("en-IN", {

@@ -215,30 +215,30 @@ const Home = () => {
       </section>
 
       {/* ================= CTA ================= */}
-    <section className="relative overflow-hidden py-20 text-white">
-  {/* Background */}
-  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500" />
-  <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_30%,white,transparent_60%)]" />
+      <section className="relative overflow-hidden py-20 text-white">
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500" />
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_30%,white,transparent_60%)]" />
 
-  {/* Content */}
-  <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
-    <h2 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
-      Ready to Taste <span className="text-yellow-200">Real India?</span>
-    </h2>
+        {/* Content */}
+        <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+            Ready to Taste <span className="text-yellow-200">Real India?</span>
+          </h2>
 
-    <p className="text-lg md:text-xl text-orange-100 mb-8">
-      Handcrafted flavors • Traditional recipes • Delivered fresh to your home
-    </p>
+          <p className="text-lg md:text-xl text-orange-100 mb-8">
+            Handcrafted flavors • Traditional recipes • Delivered fresh to your home
+          </p>
 
-    <Link
-      to="/products"
-      className="inline-flex items-center gap-2 bg-white text-orange-600 font-semibold px-10 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-transform duration-300"
-    >
-      Start Shopping
-      <span className="text-xl">→</span>
-    </Link>
-  </div>
-</section>
+          <Link
+            to="/products"
+            className="inline-flex items-center gap-2 bg-white text-orange-600 font-semibold px-10 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-transform duration-300"
+          >
+            Start Shopping
+            <span className="text-xl">→</span>
+          </Link>
+        </div>
+      </section>
 
     </div>
   );

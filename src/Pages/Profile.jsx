@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import API from "@/api";
-import useAuth from "@/hooks/useAuth";
+import useAuth from "../Hooks/useAuth";
 
 import {
   Card,
