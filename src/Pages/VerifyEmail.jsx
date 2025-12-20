@@ -1,6 +1,6 @@
 import React from "react";
 import { MailCheck } from "lucide-react";
-import Button from "@/components/ui/button.jsx";
+import { Button } from "@/Components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const VerifyEmail = () => {

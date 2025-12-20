@@ -25,7 +25,7 @@ const Products = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await API.get("api/products");
+        const res = await API.get("/api/products");
         setProducts(res.data);
         setFiltered(res.data);
       } catch (err) {

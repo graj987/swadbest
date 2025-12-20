@@ -2,21 +2,20 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://swadbackendserver.onrender.com/",
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   headers: { "Content-Type": "application/json" },
 });
 
+
 // Attach token only if exists
 API.interceptors.request.use((config) => {
-  // If Authorization already exists (e.g. email verification),
-  // DO NOT override it
+  // If Authorization already exists, do not override it
   if (config.headers?.Authorization) {
     return config;
   }
 
   const token = localStorage.getItem("token");
 
-  // Routes that must never have auth
   const nonAuthRoutes = [
     "/payments/verify",
     "/payments/webhook",
@@ -32,4 +31,5 @@ API.interceptors.request.use((config) => {
 
   return config;
 });
+
 export default API;
