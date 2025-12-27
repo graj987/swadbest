@@ -10,7 +10,7 @@ import {
 } from "@/Components/ui/card.jsx";
 import { Input } from "@/Components/ui/input.jsx";
 import { Button } from "@/Components/ui/button.jsx";
-import { Label } from "@/Components/ui/label.jsx.jsx";
+import { Label } from "@/Components/ui/label.jsx";
 import { Alert, AlertDescription } from "@/Components/ui/alert.jsx";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
