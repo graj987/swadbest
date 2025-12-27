@@ -1,11 +1,11 @@
 // File: src/pages/ChangePassword.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card.jsx';
+import { Button } from '@/Components/ui/button.jsx';
+import { Input } from '@/Components/ui/input.jsx';
+import { Label } from '@/Components/ui/label.jsx';
+import { Alert, AlertTitle, AlertDescription } from '@/Components/ui/alert.jsx';
 import API from '@/api';
 
 

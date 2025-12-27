@@ -88,7 +88,7 @@ function AppRoutes() {
 
         {/* Email / OTP (public) */}
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/verify/:token" element={<Verify />} />
+       <Route path="/verify" element={<Verify />} />
         <Route path="/verifyOtp" element={<VerifyOTP />} />
 
 

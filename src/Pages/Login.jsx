@@ -1,10 +1,10 @@
 import React, { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { CardContent, Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/Components/ui/button.jsx";
+import { Input } from "@/Components/ui/input.jsx";
+import { Label } from "@/Components/ui/label.jsx.jsx";
+import { Alert, AlertTitle, AlertDescription } from "@/Components/ui/alert.jsx";
+import { CardContent, Card, CardHeader, CardTitle } from "@/Components/ui/card.jsx";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import API from "@/api";
 import useAuth  from "../Hooks/useAuth";

@@ -7,11 +7,11 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+} from "@/Components/ui/card.jsx";
+import { Input } from "@/Components/ui/input.jsx";
+import { Button } from "@/Components/ui/button.jsx";
+import { Label } from "@/Components/ui/label.jsx";
+import { Alert, AlertDescription } from "@/Components/ui/alert.jsx";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import API from "@/api";

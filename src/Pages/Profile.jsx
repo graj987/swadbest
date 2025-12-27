@@ -10,12 +10,12 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-} from "@/components/ui/card";
+} from "@/Components/ui/card.jsx";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/Components/ui/input.jsx";
+import { Button } from "@/Components/ui/button.jsx";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/Components/ui/tabs.jsx";
+import { Alert, AlertDescription } from "@/Components/ui/alert.jsx";
 
 import { Loader2, Camera, LogOut } from "lucide-react";
 

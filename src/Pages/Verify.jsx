@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, ShieldCheck, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/Components/ui/button.jsx";
 import API from "@/api";
 
 const Verify = () => {
@@ -9,7 +9,7 @@ const Verify = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
 
-  const [status, setStatus] = useState("loading"); 
+  const [status, setStatus] = useState("loading");
   // loading | success | failed
 
   useEffect(() => {
@@ -20,11 +20,7 @@ const Verify = () => {
       }
 
       try {
-        const res = await API.post(
-          "/api/users/verify",
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await API.get(`/api/users/verify?token=${token}`);
 
         if (res.data?.success) {
           setStatus("success");
@@ -33,8 +29,9 @@ const Verify = () => {
           setStatus("failed");
         }
       } catch (error) {
-        setStatus("failed",error);
+        setStatus("failed", error);
       }
+
     };
 
     verifyEmail();
