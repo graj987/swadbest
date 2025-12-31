@@ -27,7 +27,7 @@ const Checkout = () => {
     paymentMethod: "COD",
   });
 
-  /* ---------- Load cart ---------- */
+  /* ---------------- Load cart ---------------- */
   useEffect(() => {
     const raw = JSON.parse(localStorage.getItem("cart")) || [];
     const clean = raw.filter(isValidCartItem);
@@ -48,7 +48,7 @@ const Checkout = () => {
     }
   }, [user, navigate]);
 
-  /* ---------- Estimated total (UI only) ---------- */
+  /* ---------------- Estimated total (UI only) ---------------- */
   const estimatedTotal = useMemo(
     () => cart.reduce((sum, i) => sum + (i.price || 0) * i.quantity, 0),
     [cart]
@@ -57,19 +57,19 @@ const Checkout = () => {
   const onChange = (e) =>
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
-  /* ---------- Validation ---------- */
+  /* ---------------- Validation ---------------- */
   const validate = () => {
     if (!form.name.trim()) return "Name is required";
     if (!/^[6-9]\d{9}$/.test(form.phone))
       return "Enter valid 10-digit phone number";
     if (!form.address.trim()) return "Address is required";
     if (!form.city.trim()) return "City is required";
-    if (!/^\d{6}$/.test(form.pincode))
-      return "Enter valid 6-digit pincode";
+    if (!/^\d{6}$/.test(form.pincode)) return "Enter valid 6-digit pincode";
+
     return "";
   };
 
-  /* ---------- Place order ---------- */
+  /* ---------------- Place order ---------------- */
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     setError("");
@@ -88,7 +88,7 @@ const Checkout = () => {
     setLoading(true);
     try {
       const res = await API.post(
-        "/api/orders/postorders", // ✅ RESTFUL
+        "/api/orders/postorders",
         {
           products,
           address: {
@@ -98,6 +98,7 @@ const Checkout = () => {
             city: form.city,
             pincode: form.pincode,
           },
+          paymentMethod: form.paymentMethod,
         },
         { headers: getAuthHeader() }
       );
@@ -106,6 +107,7 @@ const Checkout = () => {
       if (!order?._id) throw new Error("Order creation failed");
 
       if (form.paymentMethod === "COD") {
+        // Shiprocket flow for COD
         await API.post(
           "/api/shiprocket/create-order",
           { orderId: order._id },
@@ -117,6 +119,7 @@ const Checkout = () => {
         return;
       }
 
+      // Online → Razorpay
       await startRazorpay(order._id);
     } catch (err) {
       if (err.response?.status === 401) {
@@ -129,14 +132,12 @@ const Checkout = () => {
       setLoading(false);
     }
   };
-  console.log("AUTH HEADER:", getAuthHeader());
 
-
-  /* ---------- Razorpay ---------- */
+  /* ---------------- Razorpay ---------------- */
   const startRazorpay = async (orderId) => {
     try {
       if (!window.Razorpay) {
-        setError("Payment service unavailable. Please try again later.");
+        setError("Payment service unavailable.");
         return;
       }
 
@@ -156,25 +157,22 @@ const Checkout = () => {
         name: "Swadbest",
         order_id: rpOrder.id,
         handler: async (response) => {
-          await API.post(
-            "/api/payments/verify",
-            response,
-            { headers: getAuthHeader() }
-          );
+          await API.post("/api/payments/verify", response, {
+            headers: getAuthHeader(),
+          });
 
           await API.post(
             "/api/shiprocket/create-order",
             { orderId },
             { headers: getAuthHeader() }
           );
+
           localStorage.removeItem("cart");
           navigate("/orders");
         },
         modal: {
           ondismiss: () => {
-            setError(
-              "Payment cancelled. Your order is saved — you can retry from Orders."
-            );
+            setError("Payment cancelled. Try again.");
           },
         },
         prefill: {
@@ -190,37 +188,93 @@ const Checkout = () => {
     }
   };
 
-  /* ---------- UI ---------- */
+  /* ---------------- UI ---------------- */
   return (
     <div className="min-h-screen bg-orange-50 py-10 px-4">
       <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-orange-600 mb-6">
-          Checkout
-        </h2>
+        <h2 className="text-2xl font-bold text-orange-600 mb-6">Checkout</h2>
 
         {error && <p className="text-red-600 mb-4">{error}</p>}
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* FORM */}
           <form onSubmit={handlePlaceOrder} className="space-y-4">
-            <input disabled={loading} name="name" value={form.name} onChange={onChange} className="w-full border p-2 rounded" placeholder="Full name" />
-            <input disabled={loading} name="phone" value={form.phone} onChange={onChange} className="w-full border p-2 rounded" placeholder="Phone number" />
-            <textarea disabled={loading} name="address" value={form.address} onChange={onChange} className="w-full border p-2 rounded" placeholder="Address" />
-            <input disabled={loading} name="city" value={form.city} onChange={onChange} className="w-full border p-2 rounded" placeholder="City" />
-            <input disabled={loading} name="pincode" value={form.pincode} onChange={onChange} className="w-full border p-2 rounded" placeholder="Pincode" />
+            <input
+              disabled={loading}
+              name="name"
+              value={form.name}
+              onChange={onChange}
+              className="w-full border p-2 rounded"
+              placeholder="Full name"
+            />
 
+            <input
+              disabled={loading}
+              name="phone"
+              value={form.phone}
+              onChange={onChange}
+              className="w-full border p-2 rounded"
+              placeholder="Phone number"
+            />
+
+            <textarea
+              disabled={loading}
+              name="address"
+              value={form.address}
+              onChange={onChange}
+              className="w-full border p-2 rounded"
+              placeholder="Address"
+            />
+
+            <input
+              disabled={loading}
+              name="city"
+              value={form.city}
+              onChange={onChange}
+              className="w-full border p-2 rounded"
+              placeholder="City"
+            />
+
+            <input
+              disabled={loading}
+              name="pincode"
+              value={form.pincode}
+              onChange={onChange}
+              className="w-full border p-2 rounded"
+              placeholder="Pincode"
+            />
+
+            {/* PAYMENT METHOD */}
             <div className="space-y-2">
               <label className="flex gap-2">
-                <input disabled={loading} type="radio" name="paymentMethod" value="COD" checked={form.paymentMethod === "COD"} onChange={onChange} />
+                <input
+                  disabled={loading}
+                  type="radio"
+                  name="paymentMethod"
+                  value="COD"
+                  checked={form.paymentMethod === "COD"}
+                  onChange={onChange}
+                />
                 Cash on Delivery
               </label>
+
               <label className="flex gap-2">
-                <input disabled={loading} type="radio" name="paymentMethod" value="Online" checked={form.paymentMethod === "Online"} onChange={onChange} />
+                <input
+                  disabled={loading}
+                  type="radio"
+                  name="paymentMethod"
+                  value="Online"
+                  checked={form.paymentMethod === "Online"}
+                  onChange={onChange}
+                />
                 Online Payment
               </label>
             </div>
 
-            <button disabled={loading} className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold">
+            <button
+              disabled={loading}
+              className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold"
+            >
               {loading ? "Processing..." : "Place Order"}
             </button>
           </form>
@@ -231,7 +285,9 @@ const Checkout = () => {
 
             {cart.map((i) => (
               <div key={i._id} className="flex justify-between text-sm mb-2">
-                <span>{i.name} × {i.quantity}</span>
+                <span>
+                  {i.name} × {i.quantity}
+                </span>
                 <span>₹{(i.price || 0) * i.quantity}</span>
               </div>
             ))}
@@ -248,6 +304,5 @@ const Checkout = () => {
     </div>
   );
 };
-
 
 export default Checkout;

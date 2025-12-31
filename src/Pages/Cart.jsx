@@ -1,7 +1,8 @@
 // src/pages/Cart.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import useAuth from "@/Hooks/useAuth";
+import API from "@/api";
 
 const isValidCartItem = (item) =>
   item &&
@@ -21,6 +22,9 @@ const Cart = () => {
 
   const [cart, setCart] = useState([]);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [loadingStock, setLoadingStock] = useState(false);
+
+  const validatedStockRef = useRef(false);
 
   /* ---------- Load & sanitize cart ---------- */
   useEffect(() => {
@@ -34,17 +38,53 @@ const Cart = () => {
     setCart(clean);
   }, []);
 
-  /* ---------- Total (memoized) ---------- */
-  const total = useMemo(
-    () => cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
-    [cart]
-  );
+  /* ---------- REAL-TIME STOCK CHECK (Safe, no infinite loop) ---------- */
+ /* ---------- REAL-TIME STOCK CHECK (Safe, no infinite loop) ---------- */
+useEffect(() => {
+  if (!cart.length) return;
+  if (validatedStockRef.current) return;
 
-  /* ---------- Persist helper ---------- */
+  validatedStockRef.current = true; // Prevent re-run
+
+  const validateStock = async () => {
+    try {
+      setLoadingStock(true);
+
+      const ids = cart.map((i) => i._id);
+      const res = await API.post("/api/products/check-stock", { ids });
+
+      const stockMap = res.data.stock || {};
+
+      const updated = cart.map((item) => {
+        if (!stockMap[item._id]) {
+          return { ...item, stock: 0 };
+        }
+        return { ...item, stock: stockMap[item._id] };
+      });
+
+      persist(updated);
+    } catch (err) {
+      console.error("Stock validation error:", err);
+    } finally {
+      setLoadingStock(false);
+    }
+  };
+
+  validateStock();
+}, [cart]);
+
+
+  /* ---------- Persist ---------- */
   const persist = (next) => {
     setCart(next);
     localStorage.setItem("cart", JSON.stringify(next));
   };
+
+  /* ---------- Total ---------- */
+  const total = useMemo(
+    () => cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    [cart]
+  );
 
   /* ---------- Quantity ---------- */
   const updateQuantity = (_id, delta) => {
@@ -52,12 +92,9 @@ const Cart = () => {
       cart.map((item) =>
         item._id === _id
           ? {
-            ...item,
-            quantity: Math.min(
-              MAX_QTY,
-              Math.max(1, item.quantity + delta)
-            ),
-          }
+              ...item,
+              quantity: Math.min(MAX_QTY, Math.max(1, item.quantity + delta)),
+            }
           : item
       )
     );
@@ -83,7 +120,7 @@ const Cart = () => {
     navigate("/checkout");
   };
 
-  /* ---------- Empty ---------- */
+  /* ---------- EMPTY CART ---------- */
   if (!cart.length) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-orange-50 px-4">
@@ -103,22 +140,26 @@ const Cart = () => {
   /* ---------- UI ---------- */
   return (
     <div className="min-h-screen bg-orange-50 px-4 py-8">
-
       <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg border border-orange-100">
-
         {/* HEADER */}
         <h2 className="text-xl md:text-2xl font-bold text-orange-600 mb-4">
           Your Cart <span className="text-gray-600">({cart.length} items)</span>
         </h2>
 
-        {/* CART ITEMS */}
+        {loadingStock && (
+          <p className="text-sm text-orange-500 mb-3">
+            Checking latest stock… please wait
+          </p>
+        )}
+
+        {/* CART LIST */}
         <div className="space-y-3">
           {cart.map((item) => (
             <div
               key={item._id}
               className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border border-orange-100 bg-orange-50/20 hover:shadow-sm transition"
             >
-              {/* IMAGE + DETAILS */}
+              {/* PRODUCT IMAGE & DETAILS */}
               <div className="flex items-center gap-3 flex-1">
                 <img
                   src={item.image}
@@ -129,19 +170,19 @@ const Cart = () => {
                   <p className="font-semibold text-gray-900 text-sm md:text-base">
                     {item.name}
                   </p>
+
                   <p className="text-xs text-gray-500">₹{item.price}</p>
-                  {item.stock <= 0 ? (
+
+                  {item.stock === 0 ? (
                     <p className="text-xs font-semibold text-red-600 mt-1">
                       ❌ Out of stock
                     </p>
                   ) : item.stock <= 5 ? (
                     <p className="text-xs font-semibold text-orange-600 mt-1">
-                      ⚠ Only {item.stock} left in stock
+                      ⚠ Only {item.stock} left
                     </p>
                   ) : (
-                    <p className="text-xs text-green-600 mt-1">
-                      ✔ In Stock
-                    </p>
+                    <p className="text-xs text-green-600 mt-1">✔ In Stock</p>
                   )}
                 </div>
               </div>
@@ -183,9 +224,8 @@ const Cart = () => {
           ))}
         </div>
 
-        {/* SUMMARY SECTION */}
+        {/* SUMMARY */}
         <div className="mt-8 border-t pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
-
           <Link
             to="/products"
             className="text-orange-500 font-medium hover:underline"
@@ -195,9 +235,7 @@ const Cart = () => {
 
           <div className="text-right w-full sm:w-auto">
             <p className="text-sm text-gray-600">Subtotal</p>
-            <p className="text-xl font-bold text-gray-900">
-              ₹{total}
-            </p>
+            <p className="text-xl font-bold text-gray-900">₹{total}</p>
 
             <button
               onClick={handleCheckout}
@@ -210,7 +248,7 @@ const Cart = () => {
         </div>
       </div>
 
-      {/* MOBILE STICKY CHECKOUT BAR */}
+      {/* MOBILE CHECKOUT BAR */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 flex sm:hidden justify-between items-center">
         <span className="text-lg font-bold text-gray-800">₹{total}</span>
 
@@ -221,10 +259,8 @@ const Cart = () => {
           Checkout
         </button>
       </div>
-
     </div>
   );
-
 };
 
 export default Cart;
