@@ -39,7 +39,7 @@ const Home = () => {
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
 
       {/* ================= TOP HERO ================= */}
-      <section className="border-b bg-cover bg-center " style={{backgroundImage : "url('img/coverimg.jpg')"}}>    
+      <section className="border-b bg-cover bg-center " style={{ backgroundImage: "url('img/coverimg.jpg')" }}>
         <div className="max-w-7xl mx-auto px-4 py-10 md:py-16 grid md:grid-cols-2 gap-8 md:gap-10 items-center">
           <div className="space-y-4 md:space-y-6">
             <span className="text-orange-500 font-semibold text-sm md:text-base tracking-wide">
@@ -165,7 +165,6 @@ const Home = () => {
           {[
             { name: "Masala", image: "/images/masala.jpg" },
             { name: "Snacks", image: "/images/snacks.jpg" },
-            { name: "Pickles", image: "/images/pickle.jpg" },
             { name: "Instant Mixes", image: "/images/mix.jpg" },
           ].map((cat) => (
             <Link
@@ -190,27 +189,43 @@ const Home = () => {
       </section> */}
 
       {/* ================= CTA ================= */}
-      <section className="relative overflow-hidden py-20 text-white">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500" />
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_30%,white,transparent_60%)]" />
+      <section className="relative py-24 md:py-32 text-white overflow-hidden">
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center px-6">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
-            Ready to Taste <span className="text-yellow-200">Real India?</span>
+        {/* Background Image */}
+        <img
+          src="/images/cta.jpg"
+          alt="SwadBest CTA"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-600/80 via-orange-700/70 to-black/60"></div>
+
+        {/* Soft Glow Center Light */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.25),transparent_70%)]"></div>
+
+        {/* Decorative Shine */}
+        <div className="absolute top-0 left-1/2 w-[80%] h-[120px] bg-white/20 blur-3xl rounded-full opacity-20 -translate-x-1/2"></div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-3xl mx-auto text-center px-6">
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight drop-shadow-lg">
+            Ready to Taste <span className="text-yellow-300">Real India?</span>
           </h2>
 
-          <p className="text-base md:text-xl text-orange-100 mb-8">
+          <p className="text-base md:text-xl text-orange-100 mt-6 mb-10 max-w-2xl mx-auto drop-shadow-md">
             Handcrafted flavors • Traditional recipes • Delivered fresh to your home
           </p>
 
           <Link
             to="/products"
-            className="inline-flex items-center gap-2 bg-white text-orange-600 font-semibold px-10 py-4 rounded-full shadow-lg hover:shadow-2xl hover:scale-105 transition-transform duration-300"
+            className="inline-flex items-center gap-3 bg-white text-orange-700 font-semibold px-10 py-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-transform duration-300"
           >
-            Start Shopping <span className="text-xl">→</span>
+            Start Shopping <span className="text-2xl">→</span>
           </Link>
         </div>
       </section>
+
     </div>
   );
 };
