@@ -106,6 +106,12 @@ const Checkout = () => {
       if (!order?._id) throw new Error("Order creation failed");
 
       if (form.paymentMethod === "COD") {
+        await API.post(
+          "/api/shiprocket/create-order",
+          { orderId: order._id },
+          { headers: getAuthHeader() }
+        );
+
         localStorage.removeItem("cart");
         navigate("/orders");
         return;
@@ -153,6 +159,12 @@ const Checkout = () => {
           await API.post(
             "/api/payments/verify",
             response,
+            { headers: getAuthHeader() }
+          );
+
+          await API.post(
+            "/api/shiprocket/create-order",
+            { orderId },
             { headers: getAuthHeader() }
           );
           localStorage.removeItem("cart");

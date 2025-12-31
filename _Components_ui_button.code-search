@@ -1,0 +1,50 @@
+# Query: @/Components/ui/button
+# Flags: WordMatch
+# ContextLines: 1
+
+9 results - 9 files
+
+src\Pages\ChangePassword.jsx:
+  4  import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  5: import { Button } from '@/Components/ui/button.jsx';
+  6  import { Input } from '@/components/ui/input';
+
+src\Pages\ForgotPassword.jsx:
+  10  } from "@/components/ui/card.jsx";
+  11: import { Button } from "@/Components/ui/button.jsx";
+  12  import { Input } from "@/components/ui/input";
+
+src\Pages\Login.jsx:
+  2  import { useNavigate, Link } from "react-router-dom";
+  3: import { Button } from "@/Components/ui/button.jsx.jsx";
+  4  import { Input } from "@/Components/ui/input.jsx";
+
+src\Pages\Profile.jsx:
+  15  import { Input } from "@/components/ui/input";
+  16: import { Button } from "@/Components/ui/button.jsx";
+  17  import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+src\Pages\Register.jsx:
+  1  import React, { useState } from "react";
+  2: import { Button } from "@/Components/ui/button.jsx";
+  3  import API from "@/api";
+
+src\Pages\ResetPassword.jsx:
+  11  import { Input } from "@/components/ui/input";
+  12: import { Button } from "@/Components/ui/button.jsx";
+  13  import { Label } from "@/components/ui/label";
+
+src\Pages\Verify.jsx:
+  3  import { Loader2, ShieldCheck, XCircle } from "lucide-react";
+  4: import { Button } from "@/Components/ui/button.jsx";
+  5  import API from "@/api";
+
+src\Pages\VerifyEmail.jsx:
+  2  import { MailCheck } from "lucide-react";
+  3: import { Button } from "@/Components/ui/button.jsx";
+  4  import { useNavigate, useSearchParams } from "react-router-dom";
+
+src\Pages\VerifyOTP.jsx:
+  11  import { Input } from "@/components/ui/input";
+  12: import { Button } from "@/Components/ui/button.jsx";
+  13  import { Label } from "@/components/ui/label";

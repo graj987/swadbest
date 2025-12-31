@@ -22,6 +22,7 @@ import ProductDetail from "./Pages/ProductDetails";
 import Cart from "./Pages/Cart";
 import Checkout from "./Pages/Checkout";
 import Orders from "./Pages/Orders";
+import OrderDetails from "./Pages/OrderDetails";
 import Profile from "./Pages/Profile";
 import Contact from "./Pages/Contact";
 import Login from "./Pages/Login";
@@ -86,9 +87,10 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
+
         {/* Email / OTP (public) */}
         <Route path="/verify-email" element={<VerifyEmail />} />
-       <Route path="/verify" element={<Verify />} />
+        <Route path="/verify" element={<Verify />} />
         <Route path="/verifyOtp" element={<VerifyOTP />} />
 
 
@@ -113,6 +115,12 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="/order/:id" element={
+          <ProtectedRoute>
+            <OrderDetails />
+          </ProtectedRoute>
+          } />
+
         <Route
           path="/profile"
           element={

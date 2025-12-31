@@ -52,12 +52,12 @@ const Cart = () => {
       cart.map((item) =>
         item._id === _id
           ? {
-              ...item,
-              quantity: Math.min(
-                MAX_QTY,
-                Math.max(1, item.quantity + delta)
-              ),
-            }
+            ...item,
+            quantity: Math.min(
+              MAX_QTY,
+              Math.max(1, item.quantity + delta)
+            ),
+          }
           : item
       )
     );
@@ -102,62 +102,80 @@ const Cart = () => {
 
   /* ---------- UI ---------- */
   return (
-    <div className="min-h-screen bg-orange-50 px-4 py-10">
-      <div className="max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-lg border">
+    <div className="min-h-screen bg-orange-50 px-4 py-8">
 
-        <h2 className="text-2xl font-bold text-orange-600 mb-6">
-          Your Cart ({cart.length} items)
+      <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg border border-orange-100">
+
+        {/* HEADER */}
+        <h2 className="text-xl md:text-2xl font-bold text-orange-600 mb-4">
+          Your Cart <span className="text-gray-600">({cart.length} items)</span>
         </h2>
 
-        <div className="space-y-4">
+        {/* CART ITEMS */}
+        <div className="space-y-3">
           {cart.map((item) => (
             <div
               key={item._id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border rounded-xl p-4 hover:bg-orange-50"
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border border-orange-100 bg-orange-50/20 hover:shadow-sm transition"
             >
-              {/* Product */}
-              <div className="flex items-center gap-4">
+              {/* IMAGE + DETAILS */}
+              <div className="flex items-center gap-3 flex-1">
                 <img
                   src={item.image}
                   alt={item.name}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  className="w-16 h-16 object-cover rounded-lg border"
+                  className="w-14 h-14 rounded-lg object-cover border"
                 />
                 <div>
-                  <p className="font-semibold text-gray-800">{item.name}</p>
-                  <p className="text-sm text-gray-500">₹{item.price}</p>
+                  <p className="font-semibold text-gray-900 text-sm md:text-base">
+                    {item.name}
+                  </p>
+                  <p className="text-xs text-gray-500">₹{item.price}</p>
+                  {item.stock <= 0 ? (
+                    <p className="text-xs font-semibold text-red-600 mt-1">
+                      ❌ Out of stock
+                    </p>
+                  ) : item.stock <= 5 ? (
+                    <p className="text-xs font-semibold text-orange-600 mt-1">
+                      ⚠ Only {item.stock} left in stock
+                    </p>
+                  ) : (
+                    <p className="text-xs text-green-600 mt-1">
+                      ✔ In Stock
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Quantity */}
+              {/* QTY CONTROLS */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => updateQuantity(item._id, -1)}
-                  className="px-3 py-1 bg-gray-200 rounded"
+                  className="w-8 h-8 rounded-md bg-gray-200 text-gray-700 flex items-center justify-center hover:bg-gray-300"
                 >
                   −
                 </button>
-                <span className="font-semibold w-6 text-center">
+
+                <span className="font-semibold w-6 text-center text-sm">
                   {item.quantity}
                 </span>
+
                 <button
                   onClick={() => updateQuantity(item._id, 1)}
-                  className="px-3 py-1 bg-gray-200 rounded"
+                  className="w-8 h-8 rounded-md bg-gray-200 text-gray-700 flex items-center justify-center hover:bg-gray-300"
                 >
                   +
                 </button>
               </div>
 
-              {/* Subtotal */}
-              <div className="font-semibold text-gray-800">
+              {/* SUBTOTAL */}
+              <div className="text-sm font-bold text-gray-800 min-w-[60px] text-right">
                 ₹{item.price * item.quantity}
               </div>
 
-              {/* Remove */}
+              {/* REMOVE */}
               <button
                 onClick={() => removeItem(item._id)}
-                className="text-red-500 font-semibold"
+                className="text-red-500 text-lg hover:text-red-600"
               >
                 ✕
               </button>
@@ -165,31 +183,48 @@ const Cart = () => {
           ))}
         </div>
 
-        {/* Footer */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4 border-t pt-4">
-          <Link to="/products" className="text-orange-500 font-medium">
+        {/* SUMMARY SECTION */}
+        <div className="mt-8 border-t pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
+
+          <Link
+            to="/products"
+            className="text-orange-500 font-medium hover:underline"
+          >
             ← Continue Shopping
           </Link>
 
-          <div className="text-right">
-            <p className="text-lg">
-              Total{" "}
-              <span className="text-2xl font-bold text-orange-600">
-                ₹{total}
-              </span>
+          <div className="text-right w-full sm:w-auto">
+            <p className="text-sm text-gray-600">Subtotal</p>
+            <p className="text-xl font-bold text-gray-900">
+              ₹{total}
             </p>
+
             <button
               onClick={handleCheckout}
               disabled={checkingOut}
-              className="mt-3 bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 disabled:opacity-60"
+              className="mt-4 bg-orange-500 text-white w-full sm:w-auto px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-60"
             >
-              Proceed to Checkout
+              Proceed to Checkout →
             </button>
           </div>
         </div>
       </div>
+
+      {/* MOBILE STICKY CHECKOUT BAR */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 flex sm:hidden justify-between items-center">
+        <span className="text-lg font-bold text-gray-800">₹{total}</span>
+
+        <button
+          onClick={handleCheckout}
+          className="bg-orange-500 text-white px-5 py-2 rounded-lg font-semibold"
+        >
+          Checkout
+        </button>
+      </div>
+
     </div>
   );
+
 };
 
 export default Cart;
