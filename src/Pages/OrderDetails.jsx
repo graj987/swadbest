@@ -8,8 +8,6 @@ import useAuth from "@/Hooks/useAuth";
 const primaryGradient =
     "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white";
 
-
-
 /* ========= ORDER PAGE ========= */
 const OrderDetails = () => {
     const { id } = useParams();
@@ -252,6 +250,23 @@ const OrderDetails = () => {
                             className={`${primaryGradient} px-8 py-3 rounded-lg font-semibold shadow-lg`}
                         >
                             Reorder 🔁
+                        </button>
+                        <button
+                            onClick={async () => {
+                                try {
+                                    await API.put(`/api/orders/cancel/${order._id}`, {}, {
+                                        headers: getAuthHeader(),
+                                    });
+                                    alert("Order cancelled successfully");
+                                    navigate("/orders");
+                                } catch (err) {
+                                    alert("Failed to cancel order",err);
+                                }
+                            }}
+                            className={`${primaryGradient} px-8 py-3 rounded-lg font-semibold shadow-lg`}
+                        >
+                            Cancel Order ❌
+
                         </button>
 
                         {/* TRACK */}

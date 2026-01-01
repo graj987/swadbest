@@ -198,6 +198,35 @@ const Orders = () => {
                   Pay Now
                 </button>
               )}
+             <button
+  onClick={async () => {
+    const confirmCancel = window.confirm(
+      "Are you sure you want to cancel this order?"
+    );
+    if (!confirmCancel) return;
+
+    try {
+      const res = await API.put(
+        `/api/orders/cancel/${order._id}`,
+        {},
+        { headers: getAuthHeader() }
+      );
+
+      alert(res.data.message || "Order cancelled successfully");
+
+      // Refresh page or go to orders page
+      navigate("/orders");
+    } catch (err) {
+      const msg =
+        err.response?.data?.message || "Unable to cancel order. Try again.";
+      alert(msg);
+    }
+  }}
+  className="bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-semibold shadow"
+>
+  Cancel Order ❌
+</button>
+
             </div>
           </div>
 
