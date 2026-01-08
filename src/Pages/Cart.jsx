@@ -1,116 +1,92 @@
-// src/pages/Cart.jsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import useAuth from "@/Hooks/useAuth";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import API from "@/api";
-
-const isValidCartItem = (item) =>
-  item &&
-  typeof item === "object" &&
-  typeof item._id === "string" &&
-  typeof item.name === "string" &&
-  typeof item.price === "number" &&
-  item.price >= 0 &&
-  typeof item.quantity === "number" &&
-  item.quantity > 0;
+import useAuth from "@/Hooks/useAuth";
+import useCartCount from "@/Hooks/useCartCount";
 
 const MAX_QTY = 10;
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { user, getAuthHeader, isAuthenticated } = useAuth();
+  const { refetch } = useCartCount();
 
   const [cart, setCart] = useState([]);
-  const [checkingOut, setCheckingOut] = useState(false);
-  const [loadingStock, setLoadingStock] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
-  const validatedStockRef = useRef(false);
+  const fetchCart = useCallback(async () => {
+    if (!user) return;
 
-  /* ---------- Load & sanitize cart ---------- */
-  useEffect(() => {
-    const raw = JSON.parse(localStorage.getItem("cart")) || [];
-    const clean = raw.filter(isValidCartItem);
-
-    if (clean.length !== raw.length) {
-      localStorage.setItem("cart", JSON.stringify(clean));
-    }
-
-    setCart(clean);
-  }, []);
-
-  /* ---------- REAL-TIME STOCK CHECK (Safe, no infinite loop) ---------- */
- /* ---------- REAL-TIME STOCK CHECK (Safe, no infinite loop) ---------- */
-useEffect(() => {
-  if (!cart.length) return;
-  if (validatedStockRef.current) return;
-
-  validatedStockRef.current = true; // Prevent re-run
-
-  const validateStock = async () => {
     try {
-      setLoadingStock(true);
-
-      const ids = cart.map((i) => i._id);
-      const res = await API.post("/api/orders/check-stock", { ids });
-
-      const stockMap = res.data.stock || {};
-
-      const updated = cart.map((item) => {
-        if (!stockMap[item._id]) {
-          return { ...item, stock: 0 };
-        }
-        return { ...item, stock: stockMap[item._id] };
+      setLoading(true);
+      const { data } = await API.get("/api/cart/cart", {
+        headers: getAuthHeader(),
       });
-
-      persist(updated);
+      setCart(data.items || []);
     } catch (err) {
-      console.error("Stock validation error:", err);
+      console.error("Fetch cart failed", err);
     } finally {
-      setLoadingStock(false);
+      setLoading(false);
     }
-  };
+  }, [user, getAuthHeader]);
 
-  validateStock();
-}, [cart]);
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
-
-  /* ---------- Persist ---------- */
-  const persist = (next) => {
-    setCart(next);
-    localStorage.setItem("cart", JSON.stringify(next));
-  };
-
-  /* ---------- Total ---------- */
   const total = useMemo(
-    () => cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    () => cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
     [cart]
   );
 
-  /* ---------- Quantity ---------- */
-  const updateQuantity = (_id, delta) => {
-    persist(
-      cart.map((item) =>
-        item._id === _id
-          ? {
-              ...item,
-              quantity: Math.min(MAX_QTY, Math.max(1, item.quantity + delta)),
-            }
-          : item
-      )
-    );
+  const updateQuantity = async (productId, delta) => {
+    if (updating) return;
+
+    const item = cart.find((i) => i.product._id === productId);
+    if (!item) return;
+
+    const newQty = Math.min(MAX_QTY, Math.max(1, item.quantity + delta));
+    if (newQty === item.quantity) return;
+
+    try {
+      setUpdating(true);
+      await API.patch(
+        "/api/cart/cart/update",
+        { productId, quantity: newQty },
+        { headers: getAuthHeader() }
+      );
+
+      setCart((prev) =>
+        prev.map((i) =>
+          i.product._id === productId ? { ...i, quantity: newQty } : i
+        )
+      );
+      refetch?.();
+    } catch (err) {
+      console.error("Update quantity failed", err);
+    } finally {
+      setUpdating(false);
+    }
   };
 
-  /* ---------- Remove ---------- */
-  const removeItem = (_id) => {
+  const removeItem = async (productId) => {
     if (!window.confirm("Remove this item from cart?")) return;
-    persist(cart.filter((i) => i._id !== _id));
+
+    try {
+      await API.delete(`/api/cart/cart/remove/${productId}`, {
+        headers: getAuthHeader(),
+      });
+
+      setCart((prev) => prev.filter((i) => i.product._id !== productId));
+      refetch?.();
+    } catch (err) {
+      console.error("Remove item failed", err);
+    }
   };
 
-  /* ---------- Checkout ---------- */
   const handleCheckout = () => {
-    if (!cart.length || checkingOut) return;
-
-    setCheckingOut(true);
+    if (!cart.length) return;
 
     if (!isAuthenticated) {
       navigate("/login", { state: { from: "/checkout" } });
@@ -120,7 +96,27 @@ useEffect(() => {
     navigate("/checkout");
   };
 
-  /* ---------- EMPTY CART ---------- */
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Link
+          to="/login"
+          className="px-6 py-3 bg-orange-600 text-white rounded-lg"
+        >
+          Login to view cart
+        </Link>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading cart…
+      </div>
+    );
+  }
+
   if (!cart.length) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-orange-50 px-4">
@@ -137,86 +133,53 @@ useEffect(() => {
     );
   }
 
-  /* ---------- UI ---------- */
   return (
     <div className="min-h-screen bg-orange-50 px-4 py-8">
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg border border-orange-100">
-        {/* HEADER */}
-        <h2 className="text-xl md:text-2xl font-bold text-orange-600 mb-4">
-          Your Cart <span className="text-gray-600">({cart.length} items)</span>
+      <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg border">
+        <h2 className="text-xl md:text-2xl font-bold text-orange-600 mb-6">
+          Your Cart ({cart.length} items)
         </h2>
 
-        {loadingStock && (
-          <p className="text-sm text-orange-500 mb-3">
-            Checking latest stock… please wait
-          </p>
-        )}
-
-        {/* CART LIST */}
-        <div className="space-y-3">
-          {cart.map((item) => (
+        <div className="space-y-4">
+          {cart.map(({ product, quantity }) => (
             <div
-              key={item._id}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border border-orange-100 bg-orange-50/20 hover:shadow-sm transition"
+              key={product._id}
+              className="flex flex-col sm:flex-row items-center gap-4 border rounded-lg p-4"
             >
-              {/* PRODUCT IMAGE & DETAILS */}
-              <div className="flex items-center gap-3 flex-1">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-14 h-14 rounded-lg object-cover border"
-                />
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm md:text-base">
-                    {item.name}
-                  </p>
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-16 h-16 rounded-lg object-cover"
+              />
 
-                  <p className="text-xs text-gray-500">₹{item.price}</p>
-
-                  {item.stock === 0 ? (
-                    <p className="text-xs font-semibold text-red-600 mt-1">
-                      ❌ Out of stock
-                    </p>
-                  ) : item.stock <= 5 ? (
-                    <p className="text-xs font-semibold text-orange-600 mt-1">
-                      ⚠ Only {item.stock} left
-                    </p>
-                  ) : (
-                    <p className="text-xs text-green-600 mt-1">✔ In Stock</p>
-                  )}
-                </div>
+              <div className="flex-1">
+                <p className="font-semibold">{product.name}</p>
+                <p className="text-sm text-gray-500">₹{product.price}</p>
               </div>
 
-              {/* QTY CONTROLS */}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => updateQuantity(item._id, -1)}
-                  className="w-8 h-8 rounded-md bg-gray-200 text-gray-700 flex items-center justify-center hover:bg-gray-300"
+                  onClick={() => updateQuantity(product._id, -1)}
+                  className="w-8 h-8 bg-gray-200 rounded"
                 >
                   −
                 </button>
-
-                <span className="font-semibold w-6 text-center text-sm">
-                  {item.quantity}
-                </span>
-
+                <span className="font-semibold">{quantity}</span>
                 <button
-                  onClick={() => updateQuantity(item._id, 1)}
-                  className="w-8 h-8 rounded-md bg-gray-200 text-gray-700 flex items-center justify-center hover:bg-gray-300"
+                  onClick={() => updateQuantity(product._id, 1)}
+                  className="w-8 h-8 bg-gray-200 rounded"
                 >
                   +
                 </button>
               </div>
 
-              {/* SUBTOTAL */}
-              <div className="text-sm font-bold text-gray-800 min-w-[60px] text-right">
-                ₹{item.price * item.quantity}
-              </div>
+              <p className="font-bold min-w-[70px] text-right">
+                ₹{product.price * quantity}
+              </p>
 
-              {/* REMOVE */}
               <button
-                onClick={() => removeItem(item._id)}
-                className="text-red-500 text-lg hover:text-red-600"
+                onClick={() => removeItem(product._id)}
+                className="text-red-500 text-lg"
               >
                 ✕
               </button>
@@ -224,40 +187,23 @@ useEffect(() => {
           ))}
         </div>
 
-        {/* SUMMARY */}
-        <div className="mt-8 border-t pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
-          <Link
-            to="/products"
-            className="text-orange-500 font-medium hover:underline"
-          >
+        <div className="mt-8 border-t pt-6 flex justify-between items-center">
+          <Link to="/products" className="text-orange-500 hover:underline">
             ← Continue Shopping
           </Link>
 
-          <div className="text-right w-full sm:w-auto">
+          <div className="text-right">
             <p className="text-sm text-gray-600">Subtotal</p>
-            <p className="text-xl font-bold text-gray-900">₹{total}</p>
+            <p className="text-2xl font-bold">₹{total}</p>
 
             <button
               onClick={handleCheckout}
-              disabled={checkingOut}
-              className="mt-4 bg-orange-500 text-white w-full sm:w-auto px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-60"
+              className="mt-4 bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600"
             >
               Proceed to Checkout →
             </button>
           </div>
         </div>
-      </div>
-
-      {/* MOBILE CHECKOUT BAR */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 flex sm:hidden justify-between items-center">
-        <span className="text-lg font-bold text-gray-800">₹{total}</span>
-
-        <button
-          onClick={handleCheckout}
-          className="bg-orange-500 text-white px-5 py-2 rounded-lg font-semibold"
-        >
-          Checkout
-        </button>
       </div>
     </div>
   );

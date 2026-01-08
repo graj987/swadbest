@@ -29,45 +29,71 @@ const Home = () => {
     <main className="bg-white text-gray-800">
 
       {/* ================= HERO ================= */}
-      <section
-        className="relative bg-cover bg-center"
-        style={{ backgroundImage: "url('/img/coverimg.jpg')" }}
-      >
-        <div className="absolute inset-0 bg-black/50"></div>
+      <section className="relative overflow-hidden">
+        {/* Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-700 via-orange-600 to-red-700"></div>
 
-        <div className="relative max-w-7xl mx-auto px-5 py-20 md:py-28 grid md:grid-cols-2 gap-10 items-center text-white">
-          <div className="space-y-6">
-            <span className="inline-block text-sm font-semibold tracking-widest text-orange-300">
-              PURE • HOMEMADE • TRUSTED
-            </span>
+        {/* Soft Pattern / Glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_65%)]"></div>
 
-            <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
-              Taste You Can <span className="text-orange-400">Trust</span>
-            </h1>
+        <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-28 text-white">
 
-            <p className="text-gray-200 text-lg max-w-md">
-              Authentic homemade masala, pickles & snacks crafted
-              with traditional recipes and uncompromising hygiene.
-            </p>
+          {/* Top small navigation (optional) */}
+          <div className="flex justify-between items-center text-xs opacity-80 mb-10">
+            <span>Pure • Homemade</span>
+            <span>SwadBest</span>
+          </div>
 
-            <div className="flex gap-4">
-              <Link
-                to="/products"
-                className="bg-orange-600 hover:bg-orange-700 px-7 py-3 rounded-xl font-semibold transition"
-              >
-                Shop Now
-              </Link>
+          <div className="grid md:grid-cols-2 gap-14 items-center">
 
-              <Link
-                to="/about"
-                className="border border-white/40 px-7 py-3 rounded-xl hover:bg-white/10 transition"
-              >
-                Learn More
-              </Link>
+            {/* LEFT CONTENT */}
+            <div className="space-y-6">
+              <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
+                Authentic <br />
+                <span className="text-yellow-300">Homemade Taste</span>
+              </h1>
+
+              <p className="text-orange-100 text-lg max-w-md">
+                Crafted in small batches using traditional recipes,
+                premium ingredients, and strict hygiene.
+              </p>
+
+              <div className="flex gap-4 pt-4">
+                <Link
+                  to="/products"
+                  className="bg-white text-orange-700 px-7 py-3 rounded-full font-semibold shadow-lg hover:scale-105 transition"
+                >
+                  Shop Now →
+                </Link>
+
+                <Link
+                  to="/about"
+                  className="border border-white/40 px-7 py-3 rounded-full hover:bg-white/10 transition"
+                >
+                  Learn More
+                </Link>
+              </div>
             </div>
+
+            {/* RIGHT PRODUCT STAGE */}
+            <div className="relative flex justify-center">
+              {/* Product Glow */}
+              <div className="absolute w-72 h-72 bg-white/20 blur-3xl rounded-full"></div>
+
+              {/* PRODUCT IMAGE (add later) */}
+              <div className="relative z-10">
+                <img
+                  src="/img/coverimg.jpg" // replace later
+                  alt="SwadBest Product"
+                  className="h-80 md:h-96 object-contain drop-shadow-2xl"
+                />
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
+
 
       {/* ================= TRUST STRIP ================= */}
       <section className="bg-gray-50 border-b">

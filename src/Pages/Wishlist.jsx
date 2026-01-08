@@ -1,36 +1,84 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import API from "@/api";
+import useAuth from "@/Hooks/useAuth";
+import useCartCount from "@/Hooks/useCartCount";
 
 const Wishlist = () => {
+  const { user, getAuthHeader } = useAuth();
+  const { refetch } = useCartCount();
   const [wishlist, setWishlist] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Load wishlist
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("wishlist")) || [];
-    setWishlist(stored);
-  }, []);
+  const fetchWishlist = useCallback(async () => {
+    if (!user) return;
 
-  // Remove item
-  const removeFromWishlist = (id) => {
-    const updated = wishlist.filter((item) => item._id !== id);
-    setWishlist(updated);
-    localStorage.setItem("wishlist", JSON.stringify(updated));
-  };
-
-  // Move to cart
-  const moveToCart = (product) => {
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const exists = cart.find((item) => item._id === product._id);
-
-    if (exists) {
-      exists.quantity += 1;
-    } else {
-      cart.push({ ...product, quantity: 1 });
+    try {
+      const { data } = await API.get("/api/user/wishlist", {
+        headers: getAuthHeader(),
+      });
+      setWishlist(data.products || []);
+    } catch (err) {
+      console.error("Failed to load wishlist", err);
+    } finally {
+      setLoading(false);
     }
+  }, [user, getAuthHeader]);
 
-    localStorage.setItem("cart", JSON.stringify(cart));
-    removeFromWishlist(product._id);
+  useEffect(() => {
+    fetchWishlist();
+  }, [fetchWishlist]);
+
+  const removeFromWishlist = async (productId) => {
+    try {
+      await API.post(
+        "/api/cart/wishlist/toggle",
+        { productId },
+        { headers: getAuthHeader() }
+      );
+      setWishlist((prev) => prev.filter((p) => p._id !== productId));
+      refetch?.();
+    } catch (err) {
+      console.error("Remove wishlist failed", err);
+    }
   };
+
+  const moveToCart = async (productId) => {
+    try {
+      await API.post(
+        "/api/cart/wishlist/move-to-cart",
+        { productId, quantity: 1 },
+        { headers: getAuthHeader() }
+      );
+      setWishlist((prev) => prev.filter((p) => p._id !== productId));
+      refetch?.();
+    } catch (err) {
+      console.error("Move to cart failed", err);
+      alert(err?.response?.data?.message || "Failed to move item");
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <p className="text-gray-600 mb-4">Please login to view your wishlist</p>
+        <Link
+          to="/login"
+          className="px-6 py-2 bg-orange-600 text-white rounded-lg"
+        >
+          Login
+        </Link>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        Loading wishlist...
+      </div>
+    );
+  }
 
   if (wishlist.length === 0) {
     return (
@@ -38,12 +86,10 @@ const Wishlist = () => {
         <h2 className="text-2xl font-semibold text-gray-700">
           Your wishlist is empty
         </h2>
-        <p className="text-gray-500 mt-2">
-          Stop bookmarking dreams. Add products.
-        </p>
+        <p className="text-gray-500 mt-2">Add items you love. Buy later.</p>
         <Link
           to="/products"
-          className="mt-6 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+          className="mt-6 px-6 py-2 bg-orange-600 text-white rounded-lg"
         >
           Browse Products
         </Link>
@@ -80,7 +126,7 @@ const Wishlist = () => {
 
               <div className="mt-4 flex gap-2">
                 <button
-                  onClick={() => moveToCart(product)}
+                  onClick={() => moveToCart(product._id)}
                   className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700"
                 >
                   Move to Cart
@@ -89,7 +135,6 @@ const Wishlist = () => {
                 <button
                   onClick={() => removeFromWishlist(product._id)}
                   className="px-3 py-2 border rounded-lg text-gray-600 hover:bg-gray-100"
-                  title="Remove"
                 >
                   ✕
                 </button>

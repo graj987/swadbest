@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import API from "@/api";
 import useAuth from "@/Hooks/useAuth";
 import useCartCount from "@/Hooks/useCartCount";
@@ -6,9 +6,8 @@ import useCartCount from "@/Hooks/useCartCount";
 export default function ProductCard({ product }) {
   const { user, getAuthHeader } = useAuth();
   const { refetch } = useCartCount();
-  const navigate = useNavigate();
 
-  // ADD TO CART
+  /* ================= ADD TO CART ================= */
   const handleAddToCart = async () => {
     if (!user) {
       alert("Please login to add items to cart");
@@ -17,40 +16,53 @@ export default function ProductCard({ product }) {
 
     try {
       await API.post(
-        "/api/cart/add",
+        "/api/cart/cart/add",
         { productId: product._id, quantity: 1 },
         { headers: getAuthHeader() }
       );
+
+      // refresh cart + wishlist counts
       refetch?.();
     } catch (err) {
       console.error("Add to cart failed", err);
+      alert(err?.response?.data?.message || "Failed to add to cart");
     }
   };
 
-  // WISHLIST
-  const handleWishlist = (e) => {
+  /* ================= TOGGLE WISHLIST ================= */
+  const handleWishlist = async (e) => {
     e.stopPropagation();
-    const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-    const exists = wishlist.find((item) => item._id === product._id);
 
-    const updated = exists
-      ? wishlist.filter((item) => item._id !== product._id)
-      : [...wishlist, product];
+    if (!user) {
+      alert("Please login to manage wishlist");
+      return;
+    }
 
-    localStorage.setItem("wishlist", JSON.stringify(updated));
-    navigate("/wishlist");
+    try {
+      await API.post(
+        "/api/cart/wishlist/toggle",
+        { productId: product._id },
+        { headers: getAuthHeader() }
+      );
+
+      // refresh cart + wishlist counts
+      refetch?.();
+    } catch (err) {
+      console.error("Wishlist toggle failed", err);
+      alert(err?.response?.data?.message || "Wishlist action failed");
+    }
   };
 
   return (
-    <div className="
-      group bg-white border border-gray-200 rounded-2xl overflow-hidden
-      transition-all duration-300
-      hover:shadow-xl hover:-translate-y-1
-    ">
-
+    <div
+      className="
+        group bg-white border border-gray-200 rounded-2xl overflow-hidden
+        transition-all duration-300
+        hover:shadow-xl hover:-translate-y-1
+      "
+    >
       {/* IMAGE */}
       <div className="relative aspect-square bg-gray-100 overflow-hidden">
-
         <Link to={`/products/${product._id}`}>
           <img
             src={product.image}
@@ -65,11 +77,13 @@ export default function ProductCard({ product }) {
 
         {/* DISCOUNT BADGE */}
         {product.discount && (
-          <span className="
-            absolute top-3 left-3
-            rounded-full bg-orange-600 px-3 py-1
-            text-xs font-semibold text-white
-          ">
+          <span
+            className="
+              absolute top-3 left-3
+              rounded-full bg-orange-600 px-3 py-1
+              text-xs font-semibold text-white
+            "
+          >
             {product.discount}% OFF
           </span>
         )}
@@ -77,7 +91,7 @@ export default function ProductCard({ product }) {
         {/* WISHLIST */}
         <button
           onClick={handleWishlist}
-          aria-label="Add to wishlist"
+          aria-label="Toggle wishlist"
           className="
             absolute top-3 right-3
             h-9 w-9 rounded-full
@@ -89,7 +103,7 @@ export default function ProductCard({ product }) {
           <span className="text-lg">♡</span>
         </button>
 
-        {/* OUT OF STOCK OVERLAY */}
+        {/* OUT OF STOCK */}
         {product.stock === 0 && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
             <span className="text-white text-sm font-semibold tracking-wide">
@@ -101,13 +115,10 @@ export default function ProductCard({ product }) {
 
       {/* CONTENT */}
       <div className="p-4 space-y-2">
-
-        {/* NAME */}
         <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
           {product.name}
         </h3>
 
-        {/* PRICE */}
         <div className="flex items-center gap-2">
           <span className="text-lg font-bold text-orange-600">
             ₹{product.price}
@@ -119,18 +130,15 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* RATING */}
         <div className="text-xs text-gray-500">
           ★ {product.rating || "4.5"} · {product.totalReviews || "120"} reviews
         </div>
 
-        {/* CTA */}
         <button
           disabled={product.stock === 0}
           onClick={handleAddToCart}
           className={`
-            w-full mt-3 rounded-xl py-2.5 text-sm font-semibold
-            transition
+            w-full mt-3 rounded-xl py-2.5 text-sm font-semibold transition
             ${
               product.stock > 0
                 ? "bg-orange-600 text-white hover:bg-orange-700"

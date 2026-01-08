@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "@/Hooks/useAuth";
+import { Heart, ShoppingBag } from "lucide-react";
+import useCartCount from "@/Hooks/useCartCount";
+
 import API from "@/api";
 
 export default function Navbar() {
@@ -10,17 +13,17 @@ export default function Navbar() {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileSearch, setMobileSearch] = useState(false);
-
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const { cartCount, wishlistCount } = useCartCount();
 
   const searchTimeout = useRef(null);
   const profileRef = useRef(null);
 
-  const firstName = user?.name?.split(" ")[0] || "User";
+  const firstName = user?.name?.split(" ")[0] || "Account";
   const avatarLetter = user?.name?.[0]?.toUpperCase() || "U";
 
-  /* ================= SEARCH ================= */
+  /* ---------- SEARCH ---------- */
   const fetchSuggestions = async (text) => {
     try {
       const res = await API.get(`/api/products/search?query=${text}`);
@@ -33,8 +36,8 @@ export default function Navbar() {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setQuery(value);
-
     clearTimeout(searchTimeout.current);
+
     searchTimeout.current = setTimeout(() => {
       value.trim() ? fetchSuggestions(value) : setSuggestions([]);
     }, 300);
@@ -47,7 +50,7 @@ export default function Navbar() {
     setMobileSearch(false);
   };
 
-  /* ================= OUTSIDE CLICK ================= */
+  /* ---------- OUTSIDE CLICK ---------- */
   useEffect(() => {
     const close = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -58,7 +61,6 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  /* ================= LOGOUT ================= */
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -66,34 +68,38 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ================= TOP NAVBAR ================= */}
-      <nav className="sticky top-0 z-50 bg-white border-b">
+      {/* ================= NAVBAR ================= */}
+      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
 
           {/* LOGO */}
-          <Link to="/" className="text-2xl font-extrabold">
-            <span className="text-[oklch(0.705_0.213_47.604)]">
-              Swad<span className="text-[oklch(0.21_0.034_264.665)]">Best</span>
-            </span>
+          <Link to="/" className="text-2xl font-extrabold tracking-tight">
+            <span className="text-orange-600">Swad</span>
+            <span className="text-gray-900">Best</span>
           </Link>
 
           {/* DESKTOP SEARCH */}
-          <div className="hidden md:flex relative w-[45%]">
+          <div className="hidden md:flex relative w-[40%]">
             <input
               value={query}
               onChange={handleSearchChange}
-              placeholder="Search products..."
-              className="w-full px-4 py-2 bg-gray-100 rounded-l-full outline-none"
+              placeholder="Search for masala, pickles, snacks..."
+              className="
+                w-full rounded-l-full bg-gray-100 px-5 py-2.5
+                text-sm outline-none
+                focus:ring-2 focus:ring-orange-400
+              "
             />
             <button
               onClick={handleSearch}
-              className="px-6 bg-orange-600 text-white rounded-r-full"
+              className="rounded-r-full bg-orange-600 px-6 text-white font-medium hover:bg-orange-700 transition"
             >
               Search
             </button>
 
+            {/* SUGGESTIONS */}
             {suggestions.length > 0 && (
-              <div className="absolute top-full left-0 w-full bg-white border rounded-xl shadow-lg mt-1 max-h-60 overflow-auto">
+              <div className="absolute top-full left-0 w-full mt-2 bg-white border rounded-xl shadow-lg max-h-64 overflow-auto">
                 {suggestions.map((item) => (
                   <Link
                     key={item._id}
@@ -102,11 +108,12 @@ export default function Navbar() {
                       setQuery("");
                       setSuggestions([]);
                     }}
-                    className="flex gap-3 p-3 hover:bg-gray-50"
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50"
                   >
                     <img
                       src={item.image}
-                      className="w-10 h-10 rounded object-cover"
+                      alt={item.name}
+                      className="w-10 h-10 rounded-lg object-cover"
                     />
                     <div>
                       <p className="text-sm font-medium">{item.name}</p>
@@ -119,68 +126,73 @@ export default function Navbar() {
           </div>
 
           {/* DESKTOP ACTIONS */}
-          <div className="hidden md:flex items-center gap-5 text-sm">
-            <Link to="/products" className="hover:text-orange-600">
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+
+            <Link to="/products" className="hover:text-orange-600 transition">
               Products
             </Link>
-            <Link to="/wishlist" className="text-xl">
-              wishlist
-           </Link>
+            <Link
+              to="/wishlist"
+              className="relative flex items-center gap-1.5 hover:text-orange-600 transition"
+            >
+              <Heart className="h-5 w-5" />
 
-            <Link to="/cart" className="text-xl">
-              🛒
+              {wishlistCount > 0 && (
+                <span className="
+            absolute -top-2 -right-2
+            bg-orange-600 text-white text-[10px]
+            font-bold rounded-full h-4 w-4
+            flex items-center justify-center
+          ">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
+            {/* CART */}
+            <Link
+              to="/cart"
+              className="relative flex items-center gap-1.5 hover:text-orange-600 transition"
+            >
+              <ShoppingBag className="h-5 w-5" />
+
+              {cartCount > 0 && (
+                <span className="
+            absolute -top-2 -right-2
+            bg-orange-600 text-white text-[10px]
+            font-bold rounded-full h-4 w-4
+            flex items-center justify-center
+          ">
+                  {cartCount}
+                </span>
+              )}
+
+              <span className="hidden lg:inline">Cart</span>
             </Link>
 
             {isAuth ? (
               <div ref={profileRef} className="relative">
                 <button
                   onClick={() => setProfileOpen(v => !v)}
-                  className="flex items-center gap-2 border px-3 py-1.5 rounded-lg"
+                  className="flex items-center gap-2 rounded-full border px-3 py-1.5 hover:bg-gray-50"
                 >
-                  <div className="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center font-bold text-orange-700">
+                  <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
                     {avatarLetter}
                   </div>
-                  {firstName}
+                  <span>{firstName}</span>
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg">
-                    <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">
-                      Profile
-                    </Link>
-                    <Link to="/orders" className="block px-4 py-2 hover:bg-gray-100">
-                      Orders
-                    </Link>
-                    <Link
-                      to="/privacy"
-                      className="block px-4 py-2 hover:bg-gray-100"
-                    >
-                      Privacy 
-                    </Link>
-
-                    <Link
-                      to="/about"
-                      className="block px-4 py-2 hover:bg-gray-100"
-                    >
-                      About Us
-                    </Link>
-
-                    <Link
-                      to="/help"
-                      className="block px-4 py-2 hover:bg-gray-100"
-                    >
-                      Help & Support
-                    </Link>
-
-                    <Link
-                      to="/contact"
-                      className="block px-4 py-2 hover:bg-gray-100"
-                    >
-                      Contact Us
-                    </Link>
+                  <div className="absolute right-0 mt-2 w-52 bg-white border rounded-xl shadow-lg overflow-hidden">
+                    <NavItem to="/profile" text="My Profile" />
+                    <NavItem to="/orders" text="My Orders" />
+                    <NavItem to="/wishlist" text="Wishlist" />
+                    <NavItem to="/privacy" text="Privacy Policy" />
+                    <NavItem to="/about" text="About Us" />
+                    <NavItem to="/contact" text="Contact Us" />
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                     >
                       Logout
                     </button>
@@ -190,26 +202,31 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg"
+                className="rounded-lg bg-orange-600 px-5 py-2 text-white font-semibold hover:bg-orange-700 transition"
               >
                 Login
               </Link>
             )}
           </div>
 
-          {/* MOBILE TOP BAR */}
-          <div className="md:hidden flex items-center gap-3 text-xl">
-            <button onClick={() => setMobileSearch(true)}>🔍</button>
+          {/* MOBILE ICON */}
+          <div className="md:hidden flex items-center gap-3">
+            <button
+              onClick={() => setMobileSearch(true)}
+              className="text-xl"
+            >
+              🔍
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* ================= MOBILE SEARCH OVERLAY ================= */}
+      {/* ================= MOBILE SEARCH ================= */}
       {mobileSearch && (
-        <div className="fixed inset-0 bg-white z-50">
+        <div className="fixed inset-0 z-50 bg-white">
           <div className="flex items-center gap-3 p-4 border-b">
             <button
-              className="text-2xl"
+              className="text-xl"
               onClick={() => {
                 setMobileSearch(false);
                 setSuggestions([]);
@@ -223,19 +240,19 @@ export default function Navbar() {
               value={query}
               onChange={handleSearchChange}
               placeholder="Search products..."
-              className="flex-1 px-4 py-2 bg-gray-100 rounded-full outline-none"
+              className="flex-1 rounded-full bg-gray-100 px-4 py-2 outline-none"
             />
 
             <button
               onClick={handleSearch}
-              className="text-orange-600 font-bold"
+              className="text-orange-600 font-semibold"
             >
               Go
             </button>
           </div>
 
           {suggestions.length > 0 && (
-            <div className="max-h-[80vh] overflow-auto">
+            <div className="overflow-auto">
               {suggestions.map((item) => (
                 <Link
                   key={item._id}
@@ -249,10 +266,11 @@ export default function Navbar() {
                 >
                   <img
                     src={item.image}
-                    className="w-12 h-12 rounded object-cover"
+                    alt={item.name}
+                    className="w-12 h-12 rounded-lg object-cover"
                   />
                   <div>
-                    <p className="font-medium text-sm">{item.name}</p>
+                    <p className="text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-gray-500">{item.category}</p>
                   </div>
                 </Link>
@@ -262,5 +280,17 @@ export default function Navbar() {
         </div>
       )}
     </>
+  );
+}
+
+/* ---------- SMALL COMPONENT ---------- */
+function NavItem({ to, text }) {
+  return (
+    <Link
+      to={to}
+      className="block px-4 py-2 text-sm hover:bg-gray-100"
+    >
+      {text}
+    </Link>
   );
 }
