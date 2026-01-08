@@ -28,74 +28,90 @@ const Home = () => {
   return (
     <main className="bg-white text-gray-800">
 
-      {/* ================= HERO ================= */}
-      <section className="relative overflow-hidden">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-700 via-orange-600 to-red-700"></div>
+      <section className="relative min-h-screen overflow-hidden">
 
-        {/* Soft Pattern / Glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.18),transparent_65%)]"></div>
+        {/* GRADIENT BACKGROUND */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-700 via-orange-600 to-red-700" />
 
-        <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-28 text-white">
+        {/* SOFT LEAF / SHAPE PATTERN (OPTIONAL, VERY SUBTLE) */}
+        <div className="absolute inset-0 opacity-[0.08] bg-[url('/img/pattern-leaf.svg')] bg-repeat bg-[length:320px]" />
 
-          {/* Top small navigation (optional) */}
-          <div className="flex justify-between items-center text-xs opacity-80 mb-10">
-            <span>Pure • Homemade</span>
-            <span>SwadBest</span>
+        {/* CONTENT */}
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen text-white px-6">
+
+          {/* TOP BAR */}
+          <div className="absolute top-6 left-0 right-0 max-w-7xl mx-auto px-6 flex justify-between text-xs text-white/70">
+            <span>← Back</span>
+            <span className="font-semibold">SwadBest</span>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-14 items-center">
-
-            {/* LEFT CONTENT */}
-            <div className="space-y-6">
-              <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
-                Authentic <br />
-                <span className="text-yellow-300">Homemade Taste</span>
-              </h1>
-
-              <p className="text-orange-100 text-lg max-w-md">
-                Crafted in small batches using traditional recipes,
-                premium ingredients, and strict hygiene.
-              </p>
-
-              <div className="flex gap-4 pt-4">
-                <Link
-                  to="/products"
-                  className="bg-white text-orange-700 px-7 py-3 rounded-full font-semibold shadow-lg hover:scale-105 transition"
-                >
-                  Shop Now →
-                </Link>
-
-                <Link
-                  to="/about"
-                  className="border border-white/40 px-7 py-3 rounded-full hover:bg-white/10 transition"
-                >
-                  Learn More
-                </Link>
-              </div>
-            </div>
-
-            {/* RIGHT PRODUCT STAGE */}
-            <div className="relative flex justify-center">
-              {/* Product Glow */}
-              <div className="absolute w-72 h-72 bg-white/20 blur-3xl rounded-full"></div>
-
-              {/* PRODUCT IMAGE (add later) */}
-              <div className="relative z-10">
-                <img
-                  src="/img/coverimg.jpg" // replace later
-                  alt="SwadBest Product"
-                  className="h-80 md:h-96 object-contain drop-shadow-2xl"
-                />
-              </div>
-            </div>
-
+          {/* LEFT TEXT (FLOATING, NOT GRID) */}
+          <div className="absolute left-6 md:left-20 top-1/2 -translate-y-1/2 max-w-sm hidden md:block">
+            <h1 className="text-4xl font-bold leading-tight">
+              Achwani <br />
+              Homemade Spice
+            </h1>
+            <p className="text-white/80 mt-3 text-sm">
+              Crafted in small batches using traditional recipes
+              and premium ingredients.
+            </p>
+            <p className="mt-2 text-xs text-white/60">
+              250 g
+            </p>
           </div>
+
+          {/* CENTER PRODUCT (THIS IS THE STAR) */}
+          <div className="relative flex items-center justify-center">
+
+            {/* AMBIENT GLOW */}
+            <div className="absolute w-[520px] h-[520px] bg-white/20 blur-[120px] rounded-full"></div>
+
+            {/* GROUND SHADOW */}
+            <div className="absolute bottom-10 w-72 h-6 bg-black/40 blur-xl rounded-full"></div>
+
+            {/* PRODUCT IMAGE */}
+            <img
+              src="/img/coverImgnew-removebg-preview.png"
+              alt="SwadBest Achwani Spice"
+              className="
+          relative z-10
+          h-[420px] md:h-[520px]
+          object-contain
+          drop-shadow-[0_35px_45px_rgba(0,0,0,0.35)]
+        "
+            />
+          </div>
+
+          {/* RIGHT OPTIONS (LIKE 30 / 60 / 90) */}
+          <div className="absolute right-6 md:right-20 top-1/2 -translate-y-1/2 hidden md:flex flex-col gap-3">
+            {["50g", "100g", "250g"].map((v, i) => (
+              <button
+                key={i}
+                className={`w-10 h-10 rounded-full text-xs font-semibold 
+            ${v === "250g"
+                    ? "bg-white text-orange-700"
+                    : "border border-white/40 text-white/70 hover:bg-white/10"}
+          `}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+
+          {/* BOTTOM CTA */}
+          <div className="absolute bottom-10 right-6 md:right-20 flex items-center gap-4">
+            <span className="text-xl font-bold">₹250</span>
+            <button className="bg-white text-orange-700 px-6 py-3 rounded-full font-semibold shadow-lg hover:scale-105 transition">
+              Buy Now
+            </button>
+          </div>
+
         </div>
       </section>
 
 
-      {/* ================= TRUST STRIP ================= */}
+
+
       <section className="bg-gray-50 border-b">
         <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-sm">
           <TrustItem title="Hygienically Prepared" />
@@ -105,7 +121,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= FEATURED PRODUCTS ================= */}
+
       <section className="py-14 px-5">
         <div className="max-w-6xl mx-auto">
 
