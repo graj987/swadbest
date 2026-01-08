@@ -51,7 +51,7 @@ useEffect(() => {
       setLoadingStock(true);
 
       const ids = cart.map((i) => i._id);
-      const res = await API.post("/api/products/check-stock", { ids });
+      const res = await API.post("/api/orders/check-stock", { ids });
 
       const stockMap = res.data.stock || {};
 

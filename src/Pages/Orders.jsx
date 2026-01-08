@@ -68,174 +68,174 @@ const Orders = () => {
 
   return (
     <div className="min-h-screen bg-orange-50 py-10 px-4">
-  <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto">
 
-    {/* PAGE HEADER */}
-    <h2 className="text-3xl font-bold text-orange-600 mb-10 text-center">
-      Your Orders
-    </h2>
+        {/* PAGE HEADER */}
+        <h2 className="text-3xl font-bold text-orange-600 mb-10 text-center">
+          Your Orders
+        </h2>
 
-    {/* EMPTY STATE */}
-    {orders.length === 0 && !error && (
-      <div className="bg-white rounded-xl shadow-md p-10 text-center">
-        <p className="text-gray-600 mb-6">
-          Looks like you haven’t placed any orders yet.
-        </p>
-        <Link
-          to="/products"
-          className="inline-block bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600"
-        >
-          Shop Now
-        </Link>
-      </div>
-    )}
-
-    {error && <p className="text-center text-red-500 mb-6">{error}</p>}
-
-    {/* ORDER LIST */}
-    <div className="space-y-6">
-      {orders.map((order) => (
-        <div
-          key={order._id}
-          className="bg-white border border-orange-100 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all"
-        >
-          {/* ORDER HEADER */}
-          <div className="flex flex-wrap justify-between items-start gap-4 border-b pb-4">
-            <div>
-              <p className="font-bold text-gray-900 text-lg">
-                Order ID:
-                <span className="text-gray-500 ml-1 font-medium">
-                  {order._id.slice(-8)}
-                </span>
-              </p>
-
-              <p className="text-sm text-gray-500">
-                {new Date(order.createdAt).toLocaleDateString()} •{" "}
-                {new Date(order.createdAt).toLocaleTimeString()}
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold shadow-sm ${paymentBadge(
-                  order.paymentStatus
-                )}`}
-              >
-                {order.paymentStatus.toUpperCase()}
-              </span>
-
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold shadow-sm ${statusBadge(
-                  order.orderStatus
-                )}`}
-              >
-                {order.orderStatus.toUpperCase()}
-              </span>
-            </div>
+        {/* EMPTY STATE */}
+        {orders.length === 0 && !error && (
+          <div className="bg-white rounded-xl shadow-md p-10 text-center">
+            <p className="text-gray-600 mb-6">
+              Looks like you haven’t placed any orders yet.
+            </p>
+            <Link
+              to="/products"
+              className="inline-block bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600"
+            >
+              Shop Now
+            </Link>
           </div>
+        )}
 
-          {/* PRODUCT LIST */}
-          <div className="mt-4 space-y-4">
-            {order.products.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between gap-4 bg-orange-50/40 border border-orange-100 p-4 rounded-xl"
-              >
-                <div className="flex items-center gap-4">
-                  <SafeImage
-                    src={item.product?.image}
-                    alt={item.product?.name}
-                    className="w-16 h-16 rounded-lg border object-cover bg-white"
-                  />
+        {error && <p className="text-center text-red-500 mb-6">{error}</p>}
 
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      {item.product?.name}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {item.quantity} × ₹{item.priceAtPurchase}
-                    </p>
-                  </div>
+        {/* ORDER LIST */}
+        <div className="space-y-6">
+          {orders.map((order) => (
+            <div
+              key={order._id}
+              className="bg-white border border-orange-100 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all"
+            >
+              {/* ORDER HEADER */}
+              <div className="flex flex-wrap justify-between items-start gap-4 border-b pb-4">
+                <div>
+                  <p className="font-bold text-gray-900 text-lg">
+                    Order ID:
+                    <span className="text-gray-500 ml-1 font-medium">
+                      {order._id.slice(-8)}
+                    </span>
+                  </p>
+
+                  <p className="text-sm text-gray-500">
+                    {new Date(order.createdAt).toLocaleDateString()} •{" "}
+                    {new Date(order.createdAt).toLocaleTimeString()}
+                  </p>
                 </div>
 
-                <p className="font-bold text-gray-900">
-                  ₹{item.quantity * item.priceAtPurchase}
-                </p>
+                <div className="flex gap-3">
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-semibold shadow-sm ${paymentBadge(
+                      order.paymentStatus
+                    )}`}
+                  >
+                    {order.paymentStatus.toUpperCase()}
+                  </span>
+
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-semibold shadow-sm ${statusBadge(
+                      order.orderStatus
+                    )}`}
+                  >
+                    {order.orderStatus.toUpperCase()}
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
 
-          {/* ORDER FOOTER */}
-          <div className="mt-6 pt-4 border-t flex justify-between flex-wrap gap-4 items-center">
-            <p className="font-bold text-xl text-gray-900">
-              Total: ₹{order.totalAmount}
-            </p>
+              {/* PRODUCT LIST */}
+              <div className="mt-4 space-y-4">
+                {order.products.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between gap-4 bg-orange-50/40 border border-orange-100 p-4 rounded-xl"
+                  >
+                    <div className="flex items-center gap-4">
+                      <SafeImage
+                        src={item.product?.image}
+                        alt={item.product?.name}
+                        className="w-16 h-16 rounded-lg border object-cover bg-white"
+                      />
 
-            <div className="flex gap-3">
-              {order.trackingUrl && (
-                <a
-                  href={order.trackingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-lg font-semibold shadow"
-                >
-                  Track Order
-                </a>
-              )}
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {item.product?.name}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {item.quantity} × ₹{item.priceAtPurchase}
+                        </p>
+                      </div>
+                    </div>
 
-              <Link
-                to={`/order/${order._id}`}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-3 rounded-lg font-semibold shadow"
-              >
-                View Details
-              </Link>
+                    <p className="font-bold text-gray-900">
+                      ₹{item.quantity * item.priceAtPurchase}
+                    </p>
+                  </div>
+                ))}
+              </div>
 
-              {order.paymentStatus === "pending" && (
-                <button
-                  onClick={() => navigate(`/paynow/${order._id}`)}
-                  className="bg-orange-600 hover:bg-orange-700 text-white px-5 py-3 rounded-lg font-semibold shadow"
-                >
-                  Pay Now
-                </button>
-              )}
-             <button
-  onClick={async () => {
-    const confirmCancel = window.confirm(
-      "Are you sure you want to cancel this order?"
-    );
-    if (!confirmCancel) return;
+              {/* ORDER FOOTER */}
+              <div className="mt-6 pt-4 border-t flex justify-between flex-wrap gap-4 items-center">
+                <p className="font-bold text-xl text-gray-900">
+                  Total: ₹{order.totalAmount}
+                </p>
 
-    try {
-      const res = await API.put(
-        `/api/orders/cancel/${order._id}`,
-        {},
-        { headers: getAuthHeader() }
-      );
+                <div className="flex gap-3">
+                  {order.trackingUrl && (
+                    <a
+                      href={order.trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-lg font-semibold shadow"
+                    >
+                      Track Order
+                    </a>
+                  )}
 
-      alert(res.data.message || "Order cancelled successfully");
+                  <Link
+                    to={`/order/${order._id}`}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-3 rounded-lg font-semibold shadow"
+                  >
+                    View Details
+                  </Link>
 
-      // Refresh page or go to orders page
-      navigate("/orders");
-    } catch (err) {
-      const msg =
-        err.response?.data?.message || "Unable to cancel order. Try again.";
-      alert(msg);
-    }
-  }}
-  className="bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-semibold shadow"
->
-  Cancel Order ❌
-</button>
+                  {order.paymentStatus === "pending" && (
+                    <button
+                      onClick={() => navigate(`/paynow/${order._id}`)}
+                      className="bg-orange-600 hover:bg-orange-700 text-white px-5 py-3 rounded-lg font-semibold shadow"
+                    >
+                      Pay Now
+                    </button>
+                  )}
+                  <button
+                    onClick={async () => {
+                      const confirmCancel = window.confirm(
+                        "Are you sure you want to cancel this order?"
+                      );
+                      if (!confirmCancel) return;
+
+                      try {
+                        const res = await API.put(
+                          `/api/orders/cancel/${order._id}`,
+                          {},
+                          { headers: getAuthHeader() }
+                        );
+
+                        alert(res.data.message || "Order cancelled successfully");
+
+                        // Refresh page or go to orders page
+                        navigate("/orders");
+                      } catch (err) {
+                        const msg =
+                          err.response?.data?.message || "Unable to cancel order. Try again.";
+                        alert(msg);
+                      }
+                    }}
+                    className="bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-semibold shadow"
+                  >
+                    Cancel Order ❌
+                  </button>
+
+                </div>
+              </div>
 
             </div>
-          </div>
-
+          ))}
         </div>
-      ))}
-    </div>
 
-  </div>
-</div>
+      </div>
+    </div>
 
   );
 };

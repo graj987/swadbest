@@ -1,115 +1,146 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import API from "@/api";
+import useAuth from "@/Hooks/useAuth";
+import useCartCount from "@/Hooks/useCartCount";
 
-const ProductCard = ({ product }) => {
+export default function ProductCard({ product }) {
+  const { user, getAuthHeader } = useAuth();
+  const { refetch } = useCartCount();
+  const navigate = useNavigate();
 
-  const handleAddToCart = () => {
-    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-    const existing = storedCart.find((item) => item._id === product._id);
-
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      storedCart.push({ ...product, quantity: 1 });
+  // ADD TO CART
+  const handleAddToCart = async () => {
+    if (!user) {
+      alert("Please login to add items to cart");
+      return;
     }
 
-    localStorage.setItem("cart", JSON.stringify(storedCart));
-    alert(`${product.name} added to cart!`);
+    try {
+      await API.post(
+        "/api/cart/add",
+        { productId: product._id, quantity: 1 },
+        { headers: getAuthHeader() }
+      );
+      refetch?.();
+    } catch (err) {
+      console.error("Add to cart failed", err);
+    }
+  };
+
+  // WISHLIST
+  const handleWishlist = (e) => {
+    e.stopPropagation();
+    const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+    const exists = wishlist.find((item) => item._id === product._id);
+
+    const updated = exists
+      ? wishlist.filter((item) => item._id !== product._id)
+      : [...wishlist, product];
+
+    localStorage.setItem("wishlist", JSON.stringify(updated));
+    navigate("/wishlist");
   };
 
   return (
-    <div className="bg-white border border-orange-100 rounded-2xl shadow-md hover:shadow-lg transition-all overflow-hidden group">
+    <div className="
+      group bg-white border border-gray-200 rounded-2xl overflow-hidden
+      transition-all duration-300
+      hover:shadow-xl hover:-translate-y-1
+    ">
 
-      {/* PRODUCT IMAGE */}
-      <Link to={`/products/${product._id}`}>
-        <div className="relative">
+      {/* IMAGE */}
+      <div className="relative aspect-square bg-gray-100 overflow-hidden">
 
+        <Link to={`/products/${product._id}`}>
           <img
             src={product.image}
             alt={product.name}
-            className="h-60 w-full object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
+            className="
+              w-full h-full object-cover
+              transition-transform duration-500
+              group-hover:scale-105
+            "
           />
+        </Link>
 
-          {/* DISCOUNT */}
-          {product.discount && (
-            <span className="absolute top-3 left-3 bg-orange-600 text-white text-xs font-semibold px-2 py-1 rounded-lg shadow">
-              {product.discount}% OFF
+        {/* DISCOUNT BADGE */}
+        {product.discount && (
+          <span className="
+            absolute top-3 left-3
+            rounded-full bg-orange-600 px-3 py-1
+            text-xs font-semibold text-white
+          ">
+            {product.discount}% OFF
+          </span>
+        )}
+
+        {/* WISHLIST */}
+        <button
+          onClick={handleWishlist}
+          aria-label="Add to wishlist"
+          className="
+            absolute top-3 right-3
+            h-9 w-9 rounded-full
+            bg-white/90 backdrop-blur
+            flex items-center justify-center
+            shadow hover:scale-110 transition
+          "
+        >
+          <span className="text-lg">♡</span>
+        </button>
+
+        {/* OUT OF STOCK OVERLAY */}
+        {product.stock === 0 && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <span className="text-white text-sm font-semibold tracking-wide">
+              OUT OF STOCK
             </span>
-          )}
+          </div>
+        )}
+      </div>
 
-          {/* STOCK ALERT (NOW ON IMAGE) */}
-          {product.stock <= 0 ? (
-            <span className="absolute top-3 right-3 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-lg shadow">
-              Out of Stock
-            </span>
-          ) : product.stock <= 5 ? (
-            <span className="absolute top-3 right-3 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-lg shadow">
-              Only {product.stock} Left
-            </span>
-          ) : (
-            <span className="absolute top-3 right-3 bg-green-600 text-white text-xs font-semibold px-2 py-1 rounded-lg shadow">
-              In Stock
-            </span>
-          )}
+      {/* CONTENT */}
+      <div className="p-4 space-y-2">
 
-        </div>
-      </Link>
-
-      {/* DETAILS */}
-      <div className="p-4 flex flex-col gap-1">
-
-        {/* TITLE */}
-        <h3 className="font-semibold text-gray-900 leading-tight line-clamp-2">
+        {/* NAME */}
+        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
           {product.name}
         </h3>
 
-        {/* CATEGORY */}
-        <p className="text-xs text-gray-500">{product.category}</p>
-
-        {/* RATING */}
-        <div className="flex items-center gap-1 mt-1">
-          <span className="text-yellow-500 text-sm">★</span>
-          <span className="text-gray-700 text-sm font-medium">
-            {product.rating || "4.5"}
+        {/* PRICE */}
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-bold text-orange-600">
+            ₹{product.price}
           </span>
-          <span className="text-gray-400 text-xs">
-            ({product.totalReviews || "120"})
-          </span>
-        </div>
-
-        {/* PRICING */}
-        <div className="mt-2">
-          <p className="text-xl font-bold text-orange-600">₹{product.price}</p>
-
           {product.originalPrice && (
-            <p className="text-sm text-gray-500 line-through">
+            <span className="text-xs text-gray-400 line-through">
               ₹{product.originalPrice}
-            </p>
+            </span>
           )}
         </div>
 
-        {/* ACTION BUTTONS */}
-        <div className="flex gap-2 mt-4">
-
-          {/* VIEW */}
-          <Link
-            to={`/products/${product._id}`}
-            className="flex-1 bg-orange-500 text-white text-center py-2.5 rounded-xl font-semibold hover:bg-orange-600 transition shadow-sm"
-          >
-            View
-          </Link>
-
-          {/* ADD TO CART */}
-          <button
-            onClick={handleAddToCart}
-            className="flex-1 border border-orange-500 text-orange-600 font-semibold rounded-xl py-2.5 hover:bg-orange-100 transition shadow-sm"
-          >
-            Add
-          </button>
+        {/* RATING */}
+        <div className="text-xs text-gray-500">
+          ★ {product.rating || "4.5"} · {product.totalReviews || "120"} reviews
         </div>
+
+        {/* CTA */}
+        <button
+          disabled={product.stock === 0}
+          onClick={handleAddToCart}
+          className={`
+            w-full mt-3 rounded-xl py-2.5 text-sm font-semibold
+            transition
+            ${
+              product.stock > 0
+                ? "bg-orange-600 text-white hover:bg-orange-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }
+          `}
+        >
+          {product.stock > 0 ? "Add to Cart" : "Unavailable"}
+        </button>
       </div>
     </div>
   );
-};
-
-export default ProductCard;
+}

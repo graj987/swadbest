@@ -4,12 +4,10 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useLocation,
 } from "react-router-dom";
 import { Toaster } from "sonner";
+import Layout from "./Layout/Layout";
 
-import Navbar from "./Components/Navbar";
-import Footer from "./Components/Footer";
 import Loader from "./Components/Loader";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import AuthProvider from "./context/AuthProvider";
@@ -28,6 +26,8 @@ import Contact from "./Pages/Contact";
 import Login from "./Pages/Login";
 import Register from "./Pages/Register";
 import PayNow from "./Pages/PayNow";
+import Account from "./Pages/Account";
+import Address from "./Pages/Address";
 
 // Auth / Recovery
 import ForgotPassword from "./Pages/ForgotPassword";
@@ -37,29 +37,12 @@ import ResetPassword from "./Pages/ResetPassword";
 import VerifyEmail from "./Pages/VerifyEmail";
 import Verify from "./Pages/Verify";
 import VerifyOTP from "./Pages/VerifyOTP";
+import Wishlist from "./Pages/Wishlist";
+import AboutUs from "./Pages/About";
+import PrivacyPolicy from "./Pages/PrivacyPolicy";
+import Terms from "./Pages/Terms";
+import RefundPolicy from "./Pages/Refund";
 
-/* ---------------- Layout ---------------- */
-
-function Layout({ children }) {
-  const location = useLocation();
-
-  const hideLayoutPaths = [
-    "/verify-email",
-  ];
-
-  const hideLayout =
-    hideLayoutPaths.includes(location.pathname) ||
-    location.pathname.startsWith("/verify/") ||
-    location.pathname.startsWith("/verifyOtp");
-
-  return (
-    <div className="flex flex-col min-h-screen bg-orange-50">
-      {!hideLayout && <Navbar />}
-      <main className="flex-1">{children}</main>
-      {!hideLayout && <Footer />}
-    </div>
-  );
-}
 
 /* ---------------- Routes ---------------- */
 
@@ -82,10 +65,15 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/:id" element={<ProductDetail />} />
-        <Route path="/cart" element={<Cart />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/address" element={<Address />} />
+        <Route path="/about" element={<AboutUs/>}/>
+        <Route path="/privacy" element={<PrivacyPolicy/>}/>
+        <Route path="/terms" element={<Terms/>}/>
+        <Route path="/refund" element={<RefundPolicy/>}/>
+
 
 
         {/* Email / OTP (public) */}
@@ -97,6 +85,30 @@ function AppRoutes() {
         {/* Recovery */}
         <Route path="/forgotpassword" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+
+        <Route path="/wishlist" 
+        element={
+          <ProtectedRoute>
+            <Wishlist/>
+          </ProtectedRoute>
+        }
+        />
+
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <Account />
+            </ProtectedRoute>
+          }
+        />
+       <Route path="/cart"
+        element={
+          <ProtectedRoute>
+            <Cart />
+          </ProtectedRoute>
+        } 
+        />
 
         {/* Protected */}
         <Route
@@ -119,7 +131,7 @@ function AppRoutes() {
           <ProtectedRoute>
             <OrderDetails />
           </ProtectedRoute>
-          } />
+        } />
 
         <Route
           path="/profile"

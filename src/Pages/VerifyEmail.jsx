@@ -9,36 +9,54 @@ const VerifyEmail = () => {
   const email = searchParams.get("email");
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-100 px-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg text-center">
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center">
 
-        <MailCheck className="h-14 w-14 mx-auto text-green-600 mb-4" />
+        {/* Icon */}
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+          <MailCheck className="h-8 w-8 text-green-600" />
+        </div>
 
-        <h2 className="text-2xl font-bold text-green-700">
-          Verify Your Email
-        </h2>
+        {/* Title */}
+        <h1 className="text-2xl font-bold text-gray-900">
+          Verify your email address
+        </h1>
 
-        <p className="text-gray-600 mt-3">
-          We've sent a verification link to:
+        {/* Description */}
+        <p className="mt-3 text-gray-600 text-sm leading-relaxed">
+          We’ve sent a verification link to the email address below.
+          Please open your inbox and click the link to activate your account.
         </p>
 
-        <p className="text-gray-900 font-semibold mt-1">
+        {/* Email box */}
+        <div className="mt-4 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-800 break-all">
           {email || "your email address"}
-        </p>
+        </div>
 
-        <p className="text-gray-500 mt-4">
-          Please check your inbox (and spam folder).  
-          Click the verification button in the email to activate your account.
-        </p>
+        {/* Help text */}
+        <div className="mt-5 text-sm text-gray-500 space-y-1">
+          <p>• Check your spam or promotions folder</p>
+          <p>• Make sure the email address is correct</p>
+        </div>
 
+        {/* CTA */}
         <Button
-          className="w-full bg-green-600 hover:bg-green-500 mt-6"
+          className="w-full mt-7 bg-green-600 hover:bg-green-700"
           onClick={() => navigate("/login")}
         >
-          Back to Login
+          Go to Login
         </Button>
+
+        {/* Secondary action */}
+        <button
+          onClick={() => navigate("/")}
+          className="mt-4 text-sm text-gray-500 hover:text-gray-700 transition"
+        >
+          Back to Home
+        </button>
+
       </div>
-    </div>
+    </main>
   );
 };
 

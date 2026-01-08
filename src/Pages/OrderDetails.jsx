@@ -112,8 +112,8 @@ const OrderDetails = () => {
                             <span
                                 key={s}
                                 className={`cursor-pointer px-3 py-1 rounded-lg ${order.orderStatus === s
-                                        ? "bg-indigo-600 text-white"
-                                        : "bg-white text-gray-600 border"
+                                    ? "bg-indigo-600 text-white"
+                                    : "bg-white text-gray-600 border"
                                     }`}
                             >
                                 {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -253,21 +253,33 @@ const OrderDetails = () => {
                         </button>
                         <button
                             onClick={async () => {
+                                const confirmCancel = window.confirm(
+                                    "Are you sure you want to cancel this order?"
+                                );
+                                if (!confirmCancel) return;
+
                                 try {
-                                    await API.put(`/api/orders/cancel/${order._id}`, {}, {
-                                        headers: getAuthHeader(),
-                                    });
-                                    alert("Order cancelled successfully");
+                                    const res = await API.put(
+                                        `/api/orders/cancel/${order._id}`,
+                                        {},
+                                        { headers: getAuthHeader() }
+                                    );
+
+                                    alert(res.data.message || "Order cancelled successfully");
+
+                                    // Refresh page or go to orders page
                                     navigate("/orders");
                                 } catch (err) {
-                                    alert("Failed to cancel order",err);
+                                    const msg =
+                                        err.response?.data?.message || "Unable to cancel order. Try again.";
+                                    alert(msg);
                                 }
                             }}
                             className={`${primaryGradient} px-8 py-3 rounded-lg font-semibold shadow-lg`}
                         >
                             Cancel Order ❌
-
                         </button>
+
 
                         {/* TRACK */}
                         {order.trackingUrl && (
