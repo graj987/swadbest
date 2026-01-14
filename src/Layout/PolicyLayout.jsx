@@ -1,4 +1,4 @@
-export default function PolicyLayout({ title, lastUpdated, children }) {
+function PolicyLayout({ title, lastUpdated, children }) {
   return (
     <main className="bg-white text-gray-800">
       <section className="max-w-4xl mx-auto px-5 py-12">
@@ -16,3 +16,4 @@ export default function PolicyLayout({ title, lastUpdated, children }) {
     </main>
   );
 }
+export default PolicyLayout

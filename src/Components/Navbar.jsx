@@ -69,7 +69,7 @@ export default function Navbar() {
   return (
     <>
       {/* ================= NAVBAR ================= */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-orange-100">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
 
           {/* LOGO */}
@@ -79,27 +79,31 @@ export default function Navbar() {
           </Link>
 
           {/* DESKTOP SEARCH */}
-          <div className="hidden md:flex relative w-[40%]">
+          <div className="hidden md:flex relative w-[42%]">
             <input
               value={query}
               onChange={handleSearchChange}
               placeholder="Search for masala, pickles, snacks..."
               className="
-                w-full rounded-l-full bg-gray-100 px-5 py-2.5
-                text-sm outline-none
-                focus:ring-2 focus:ring-orange-400
-              "
+          w-full rounded-l-full bg-orange-50/70 px-5 py-2.5
+          text-sm outline-none placeholder:text-gray-500
+          focus:ring-2 focus:ring-orange-400
+        "
             />
             <button
               onClick={handleSearch}
-              className="rounded-r-full bg-orange-600 px-6 text-white font-medium hover:bg-orange-700 transition"
+              className="
+          rounded-r-full bg-orange-600 px-6
+          text-white font-medium
+          hover:bg-orange-700 transition
+        "
             >
               Search
             </button>
 
             {/* SUGGESTIONS */}
             {suggestions.length > 0 && (
-              <div className="absolute top-full left-0 w-full mt-2 bg-white border rounded-xl shadow-lg max-h-64 overflow-auto">
+              <div className="absolute top-full left-0 w-full mt-2 bg-white rounded-xl shadow-xl border border-orange-100 max-h-64 overflow-auto">
                 {suggestions.map((item) => (
                   <Link
                     key={item._id}
@@ -108,7 +112,7 @@ export default function Navbar() {
                       setQuery("");
                       setSuggestions([]);
                     }}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50"
+                    className="flex items-center gap-3 p-3 hover:bg-orange-50"
                   >
                     <img
                       src={item.image}
@@ -116,8 +120,12 @@ export default function Navbar() {
                       className="w-10 h-10 rounded-lg object-cover"
                     />
                     <div>
-                      <p className="text-sm font-medium">{item.name}</p>
-                      <p className="text-xs text-gray-500">{item.category}</p>
+                      <p className="text-sm font-medium text-gray-800">
+                        {item.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {item.category}
+                      </p>
                     </div>
                   </Link>
                 ))}
@@ -128,22 +136,21 @@ export default function Navbar() {
           {/* DESKTOP ACTIONS */}
           <div className="hidden md:flex items-center gap-6 text-sm font-medium">
 
-            <Link to="/products" className="hover:text-orange-600 transition">
+            <Link
+              to="/products"
+              className="relative hover:text-orange-600 transition after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:bg-orange-600 hover:after:w-full after:transition-all"
+            >
               Products
             </Link>
+
+            {/* WISHLIST */}
             <Link
               to="/wishlist"
               className="relative flex items-center gap-1.5 hover:text-orange-600 transition"
             >
               <Heart className="h-5 w-5" />
-
               {wishlistCount > 0 && (
-                <span className="
-            absolute -top-2 -right-2
-            bg-orange-600 text-white text-[10px]
-            font-bold rounded-full h-4 w-4
-            flex items-center justify-center
-          ">
+                <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
                   {wishlistCount}
                 </span>
               )}
@@ -155,26 +162,20 @@ export default function Navbar() {
               className="relative flex items-center gap-1.5 hover:text-orange-600 transition"
             >
               <ShoppingBag className="h-5 w-5" />
-
               {cartCount > 0 && (
-                <span className="
-            absolute -top-2 -right-2
-            bg-orange-600 text-white text-[10px]
-            font-bold rounded-full h-4 w-4
-            flex items-center justify-center
-          ">
+                <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
-
               <span className="hidden lg:inline">Cart</span>
             </Link>
 
+            {/* PROFILE / LOGIN */}
             {isAuth ? (
               <div ref={profileRef} className="relative">
                 <button
                   onClick={() => setProfileOpen(v => !v)}
-                  className="flex items-center gap-2 rounded-full border px-3 py-1.5 hover:bg-gray-50"
+                  className="flex items-center gap-2 rounded-full border border-orange-200 px-3 py-1.5 hover:bg-orange-50 transition"
                 >
                   <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
                     {avatarLetter}
@@ -183,7 +184,7 @@ export default function Navbar() {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-52 bg-white border rounded-xl shadow-lg overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-52 bg-white border border-orange-100 rounded-xl shadow-xl overflow-hidden">
                     <NavItem to="/profile" text="My Profile" />
                     <NavItem to="/orders" text="My Orders" />
                     <NavItem to="/wishlist" text="Wishlist" />
@@ -192,7 +193,7 @@ export default function Navbar() {
                     <NavItem to="/contact" text="Contact Us" />
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                     >
                       Logout
                     </button>
@@ -202,7 +203,7 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="rounded-lg bg-orange-600 px-5 py-2 text-white font-semibold hover:bg-orange-700 transition"
+                className="rounded-full bg-orange-600 px-5 py-2 text-white font-semibold hover:bg-orange-700 transition shadow-md"
               >
                 Login
               </Link>
@@ -213,13 +214,14 @@ export default function Navbar() {
           <div className="md:hidden flex items-center gap-3">
             <button
               onClick={() => setMobileSearch(true)}
-              className="text-xl"
+              className="text-xl text-orange-600"
             >
               🔍
             </button>
           </div>
         </div>
       </nav>
+
 
       {/* ================= MOBILE SEARCH ================= */}
       {mobileSearch && (

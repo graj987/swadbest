@@ -1,35 +1,38 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import API from "@/api";
-import useAuth from "./useAuth";
+import useAuth from "@/Hooks/useAuth";
 
 export default function useCartCount() {
-  const [count, setCount] = useState(0);
   const { user, getAuthHeader } = useAuth();
+  const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
 
-  const fetchCount = useCallback(async () => {
+  const fetchCounts = useCallback(async () => {
     if (!user) {
-      setCount(0);
+      setCartCount(0);
+      setWishlistCount(0);
       return;
     }
 
     try {
-      const res = await API.get("/api/cart/count", {
+      const { data } = await API.get("/api/cart/counts", {
         headers: getAuthHeader(),
       });
-      setCount(res.data?.count ?? 0);
+
+      setCartCount(data.cartCount || 0);
+      setWishlistCount(data.wishlistCount || 0);
     } catch (err) {
-      console.error("Failed to fetch cart count", err);
-      setCount(0);
+      console.error("Failed to fetch cart/wishlist counts", err);
     }
-  }, [getAuthHeader, user]);
+  }, [user, getAuthHeader]);
 
   useEffect(() => {
-    fetchCount();
-  }, [fetchCount]);
+    fetchCounts();
+  }, [fetchCounts]);
 
-  // 🔑 IMPORTANT: return BOTH
   return {
-    count,
-    refetch: fetchCount,
+    cartCount,
+    wishlistCount,
+    refetch: fetchCounts,
   };
 }
