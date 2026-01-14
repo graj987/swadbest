@@ -15,6 +15,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
+  /* ================= FETCH CART ================= */
   const fetchCart = useCallback(async () => {
     if (!user) return;
 
@@ -35,33 +36,57 @@ const Cart = () => {
     fetchCart();
   }, [fetchCart]);
 
+  /* ================= TOTAL ================= */
   const total = useMemo(
-    () => cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
+    () =>
+      cart.reduce(
+        (sum, item) => sum + item.variant.price * item.quantity,
+        0
+      ),
     [cart]
   );
 
-  const updateQuantity = async (productId, delta) => {
+  /* ================= UPDATE QTY ================= */
+  const updateQuantity = async (productId, weight, delta) => {
     if (updating) return;
 
-    const item = cart.find((i) => i.product._id === productId);
+    const item = cart.find(
+      (i) =>
+        i.product._id === productId &&
+        i.variant.weight === weight
+    );
+
     if (!item) return;
 
-    const newQty = Math.min(MAX_QTY, Math.max(1, item.quantity + delta));
+    const newQty = Math.min(
+      MAX_QTY,
+      Math.max(1, item.quantity + delta)
+    );
+
     if (newQty === item.quantity) return;
 
     try {
       setUpdating(true);
+
       await API.patch(
         "/api/cart/cart/update",
-        { productId, quantity: newQty },
+        {
+          productId,
+          weight,
+          quantity: newQty,
+        },
         { headers: getAuthHeader() }
       );
 
       setCart((prev) =>
         prev.map((i) =>
-          i.product._id === productId ? { ...i, quantity: newQty } : i
+          i.product._id === productId &&
+          i.variant.weight === weight
+            ? { ...i, quantity: newQty }
+            : i
         )
       );
+
       refetch?.();
     } catch (err) {
       console.error("Update quantity failed", err);
@@ -70,21 +95,33 @@ const Cart = () => {
     }
   };
 
-  const removeItem = async (productId) => {
+  /* ================= REMOVE ITEM ================= */
+  const removeItem = async (productId, weight) => {
     if (!window.confirm("Remove this item from cart?")) return;
 
     try {
-      await API.delete(`/api/cart/cart/remove/${productId}`, {
-        headers: getAuthHeader(),
-      });
+      await API.delete(
+        `/api/cart/cart/remove/${productId}/${encodeURIComponent(weight)}`,
+        { headers: getAuthHeader() }
+      );
 
-      setCart((prev) => prev.filter((i) => i.product._id !== productId));
+      setCart((prev) =>
+        prev.filter(
+          (i) =>
+            !(
+              i.product._id === productId &&
+              i.variant.weight === weight
+            )
+        )
+      );
+
       refetch?.();
     } catch (err) {
       console.error("Remove item failed", err);
     }
   };
 
+  /* ================= CHECKOUT ================= */
   const handleCheckout = () => {
     if (!cart.length) return;
 
@@ -96,6 +133,7 @@ const Cart = () => {
     navigate("/checkout");
   };
 
+  /* ================= STATES ================= */
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -133,6 +171,7 @@ const Cart = () => {
     );
   }
 
+  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-orange-50 px-4 py-8">
       <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg border">
@@ -141,9 +180,9 @@ const Cart = () => {
         </h2>
 
         <div className="space-y-4">
-          {cart.map(({ product, quantity }) => (
+          {cart.map(({ product, variant, quantity }) => (
             <div
-              key={product._id}
+              key={`${product._id}-${variant.weight}`}
               className="flex flex-col sm:flex-row items-center gap-4 border rounded-lg p-4"
             >
               <img
@@ -154,19 +193,28 @@ const Cart = () => {
 
               <div className="flex-1">
                 <p className="font-semibold">{product.name}</p>
-                <p className="text-sm text-gray-500">₹{product.price}</p>
+                <p className="text-xs text-gray-500">
+                  {variant.weight}
+                </p>
+                <p className="text-sm text-gray-700">
+                  ₹{variant.price}
+                </p>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => updateQuantity(product._id, -1)}
+                  onClick={() =>
+                    updateQuantity(product._id, variant.weight, -1)
+                  }
                   className="w-8 h-8 bg-gray-200 rounded"
                 >
                   −
                 </button>
                 <span className="font-semibold">{quantity}</span>
                 <button
-                  onClick={() => updateQuantity(product._id, 1)}
+                  onClick={() =>
+                    updateQuantity(product._id, variant.weight, 1)
+                  }
                   className="w-8 h-8 bg-gray-200 rounded"
                 >
                   +
@@ -174,11 +222,13 @@ const Cart = () => {
               </div>
 
               <p className="font-bold min-w-[70px] text-right">
-                ₹{product.price * quantity}
+                ₹{variant.price * quantity}
               </p>
 
               <button
-                onClick={() => removeItem(product._id)}
+                onClick={() =>
+                  removeItem(product._id, variant.weight)
+                }
                 className="text-red-500 text-lg"
               >
                 ✕

@@ -2,43 +2,75 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api";
 import SafeImage from "../Components/SafeImage";
+import useAuth from "../Hooks/useAuth";
+import useCartCount from "../Hooks/useCartCount";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, getAuthHeader } = useAuth();
+  const { refetch } = useCartCount();
 
   const [product, setProduct] = useState(null);
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [added, setAdded] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
 
+  /* ================= LOAD PRODUCT ================= */
   useEffect(() => {
     (async () => {
       try {
         const res = await API.get(`/api/products/${id}`);
         setProduct(res.data);
-      } catch (err) {
-        setError("Failed to load product details.",err);
+      } catch {
+        setError("Failed to load product details.");
       } finally {
         setLoading(false);
       }
     })();
   }, [id]);
 
-  const handleAddToCart = () => {
-    if (!product) return;
+  const variant = product?.variants?.[selectedVariantIndex];
 
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const existing = cart.find((item) => item._id === product._id);
+  /* ================= ADD TO CART ================= */
+  const handleAddToCart = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
 
-    if (existing) existing.quantity += 1;
-    else cart.push({ ...product, quantity: 1 });
+    if (!variant || variant.stock === 0) {
+      alert("Please select an available variant");
+      return;
+    }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+    try {
+      setAdding(true);
+
+      await API.post(
+        "/api/cart/cart/add",
+        {
+          productId: product._id,
+          quantity: 1,
+          variant: {
+            weight: variant.weight,
+            price: variant.price,
+            stock: variant.stock,
+          },
+        },
+        { headers: getAuthHeader() }
+      );
+
+      refetch?.();
+    } catch (err) {
+      alert(err?.response?.data?.message || "Failed to add to cart");
+    } finally {
+      setAdding(false);
+    }
   };
 
+  /* ================= STATES ================= */
   if (loading) {
     return (
       <div className="min-h-screen flex justify-center items-center bg-orange-50">
@@ -47,7 +79,7 @@ const ProductDetail = () => {
     );
   }
 
-  if (error || !product) {
+  if (error || !product || !variant) {
     return (
       <div className="min-h-screen flex justify-center items-center bg-orange-50">
         <p className="text-red-500">{error || "Product not found."}</p>
@@ -55,91 +87,97 @@ const ProductDetail = () => {
     );
   }
 
+  /* ================= UI ================= */
   return (
-    <div className="min-h-screen bg-orange-50 pb-20">
+    <div className="min-h-screen bg-orange-50 pb-24">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 border mt-8 grid md:grid-cols-2 gap-8">
 
-      {/* ======= MAIN SECTION ======= */}
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 border border-orange-100 mt-8 grid md:grid-cols-2 gap-8">
-
-        {/* PRODUCT IMAGE (Feature: Zoom on Hover) */}
+        {/* IMAGE */}
         <div className="flex flex-col items-center gap-4">
           <div className="overflow-hidden rounded-xl shadow-md">
             <SafeImage
               src={product.image}
               alt={product.name}
-              className="rounded-xl w-full max-w-sm h-auto object-cover transition-transform duration-300 hover:scale-105"
+              className="rounded-xl w-full max-w-sm object-cover"
             />
-          </div>
-
-          {/* Thumbnail Strip */}
-          <div className="flex gap-2">
-            {[product.image].map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                alt=""
-                className="w-16 h-16 rounded-lg border object-cover cursor-pointer hover:opacity-80 transition"
-              />
-            ))}
           </div>
         </div>
 
-        {/* ======= PRODUCT DETAILS ======= */}
+        {/* DETAILS */}
         <div className="flex flex-col">
-
-          {/* Minimal + Professional Title */}
           <h1 className="text-2xl font-bold text-gray-900 mb-1">
             {product.name}
           </h1>
 
-          <p className="text-xs text-gray-500 mb-3">{product.category}</p>
+          <p className="text-xs text-gray-500 mb-3">
+            {product.category}
+          </p>
 
-          {/* Description */}
           <p className="text-gray-700 text-sm leading-relaxed mb-4">
             {product.description || "No description available."}
           </p>
 
-          {/* Rating (Feature-Rich) */}
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-yellow-500 text-lg">★</span>
-            <p className="text-sm font-semibold text-gray-800">
-              {product.rating || "4.5"}
-            </p>
-            <p className="text-xs text-gray-500">
-              ({product.reviews || "215"} reviews)
-            </p>
+          {/* VARIANT SELECTOR */}
+          <div className="mb-4">
+            <p className="text-sm font-medium mb-2">Select Weight</p>
+            <div className="flex gap-2 flex-wrap">
+              {product.variants.map((v, i) => (
+                <button
+                  key={i}
+                  disabled={v.stock === 0}
+                  onClick={() => setSelectedVariantIndex(i)}
+                  className={`
+                    px-3 py-1 rounded-full border text-sm transition
+                    ${
+                      i === selectedVariantIndex
+                        ? "bg-orange-600 text-white border-orange-600"
+                        : "bg-white text-gray-700"
+                    }
+                    ${v.stock === 0 ? "opacity-40 cursor-not-allowed" : ""}
+                  `}
+                >
+                  {v.weight}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Price */}
-          <div className="flex items-center gap-3 mb-5">
+          {/* PRICE */}
+          <div className="flex items-center gap-3 mb-3">
             <p className="text-3xl font-extrabold text-orange-600">
-              ₹{product.price}
+              ₹{variant.price}
             </p>
             <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-lg font-semibold">
               BEST PRICE
             </span>
           </div>
 
-          {/* Specs */}
-          <div className="space-y-2 text-sm text-gray-700 mb-5">
-            {product.weight && (
-              <p><strong>Weight:</strong> {product.weight}</p>
-            )}
-            {product.ingredients && (
-              <p><strong>Ingredients:</strong> {product.ingredients}</p>
-            )}
-            {product.deliveryTime && (
-              <p><strong>Delivery:</strong> {product.deliveryTime} days</p>
+          {/* STOCK */}
+          <div className="text-sm mb-5">
+            {variant.stock > 0 ? (
+              <span className="text-green-600">
+                In stock ({variant.stock})
+              </span>
+            ) : (
+              <span className="text-red-600">Out of stock</span>
             )}
           </div>
 
-          {/* Buttons */}
+          {/* ACTIONS */}
           <div className="flex flex-col sm:flex-row gap-3 mt-auto">
             <button
               onClick={handleAddToCart}
-              className="flex-1 bg-orange-500 text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-orange-600 transition shadow"
+              disabled={variant.stock === 0 || adding}
+              className={`
+                flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition
+                ${
+                  variant.stock > 0
+                    ? "bg-orange-500 text-white hover:bg-orange-600"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }
+              `}
             >
-              {added ? "Added ✓" : "Add to Cart"}
+              {adding ? "Adding..." : "Add to Cart"}
             </button>
 
             <button
@@ -152,26 +190,14 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* ======= YOU MAY ALSO LIKE ======= */}
-      <div className="max-w-5xl mx-auto mt-12 px-3">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">
-          You May Also Like
-        </h3>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-          <div className="bg-white h-40 border rounded-xl shadow-sm flex justify-center items-center text-gray-400">
-            Coming Soon...
-          </div>
-        </div>
-      </div>
-
-      {/* ======= STICKY BOTTOM BAR (Feature-Rich) ======= */}
+      {/* MOBILE STICKY BAR */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 flex sm:hidden gap-3">
         <button
           onClick={handleAddToCart}
+          disabled={variant.stock === 0 || adding}
           className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-semibold text-sm"
         >
-          {added ? "Added ✓" : "Add to Cart"}
+          {adding ? "Adding..." : "Add to Cart"}
         </button>
 
         <button
@@ -181,7 +207,6 @@ const ProductDetail = () => {
           Cart →
         </button>
       </div>
-
     </div>
   );
 };
