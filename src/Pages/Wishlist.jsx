@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import API from "@/api";
 import useAuth from "@/Hooks/useAuth";
 import useCartCount from "@/Hooks/useCartCount";
+import { emitCartUpdate } from "@/utils/CartEvent";
 
 const Wishlist = () => {
   const { user, getAuthHeader } = useAuth();
@@ -14,10 +15,12 @@ const Wishlist = () => {
     if (!user) return;
 
     try {
-      const { data } = await API.get("/api/user/wishlist", {
+      const { data } = await API.get("/api/cart/wishlist", {
         headers: getAuthHeader(),
       });
       setWishlist(data.products || []);
+      emitCartUpdate();
+
     } catch (err) {
       console.error("Failed to load wishlist", err);
     } finally {
@@ -38,6 +41,8 @@ const Wishlist = () => {
       );
       setWishlist((prev) => prev.filter((p) => p._id !== productId));
       refetch?.();
+      emitCartUpdate();
+
     } catch (err) {
       console.error("Remove wishlist failed", err);
     }
@@ -52,6 +57,8 @@ const Wishlist = () => {
       );
       setWishlist((prev) => prev.filter((p) => p._id !== productId));
       refetch?.();
+      emitCartUpdate();
+
     } catch (err) {
       console.error("Move to cart failed", err);
       alert(err?.response?.data?.message || "Failed to move item");

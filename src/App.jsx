@@ -128,9 +128,9 @@ function AppRoutes() {
           }
         />
         <Route path="/order/:id" element={
-          <ProtectedRoute>
+         
             <OrderDetails />
-          </ProtectedRoute>
+          
         } />
 
         <Route

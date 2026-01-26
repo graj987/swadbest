@@ -3,16 +3,23 @@ import API from "@/api";
 import useAuth from "@/Hooks/useAuth";
 import useCartCount from "@/Hooks/useCartCount";
 import { useState } from "react";
+import { emitCartUpdate } from "@/utils/CartEvent";
+
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { user, getAuthHeader } = useAuth();
-  const { refetch } = useCartCount();
+  const { user, getAuthHeader, isAuthenticated } = useAuth();
 
-  // 🔥 VARIANT STATE
+const { refetch } = useCartCount({ enabled: isAuthenticated });
+
+
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  const [isAdding, setIsAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
 
   const variant = product?.variants?.[selectedVariantIndex];
+  if (!variant) return null;
 
   /* ================= ADD TO CART ================= */
   const handleAddToCart = async () => {
@@ -21,14 +28,13 @@ export default function ProductCard({ product }) {
       return;
     }
 
-    if (!variant || variant.stock === 0) {
-      alert("Please select an available variant");
-      return;
-    }
+    if (variant.stock === 0 || isAdding) return;
 
     try {
+      setIsAdding(true);
+
       await API.post(
-        "/api/cart/cart/add",
+        "/api/cart/add",
         {
           productId: product._id,
           quantity: 1,
@@ -41,14 +47,19 @@ export default function ProductCard({ product }) {
         { headers: getAuthHeader() }
       );
 
-      refetch?.();
+      refetch?.(); // safe now
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1500);
+      emitCartUpdate();
+
     } catch (err) {
       console.error("Add to cart failed", err);
-      alert(err?.response?.data?.message || "Failed to add to cart");
+    } finally {
+      setIsAdding(false);
     }
   };
 
-  /* ================= TOGGLE WISHLIST ================= */
+  /* ================= WISHLIST ================= */
   const handleWishlist = async (e) => {
     e.stopPropagation();
 
@@ -58,38 +69,30 @@ export default function ProductCard({ product }) {
     }
 
     try {
+      setWishlisted((prev) => !prev);
+
       await API.post(
         "/api/cart/wishlist/toggle",
         { productId: product._id },
         { headers: getAuthHeader() }
       );
+      emitCartUpdate();
 
-      refetch?.();
     } catch (err) {
       console.error("Wishlist toggle failed", err);
-      alert(err?.response?.data?.message || "Wishlist action failed");
+      setWishlisted((prev) => !prev);
     }
   };
 
-  if (!variant) return null;
-
   return (
-    <div
-      className="
-        group bg-white border border-gray-200 rounded-2xl overflow-hidden
-        transition-all duration-300 hover:shadow-xl hover:-translate-y-1
-      "
-    >
+    <div className="group bg-white border border-gray-200 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       {/* IMAGE */}
       <div className="relative aspect-square bg-gray-100 overflow-hidden">
         <Link to={`/products/${product._id}`}>
           <img
             src={product.image}
             alt={product.name}
-            className="
-              w-full h-full object-cover
-              transition-transform duration-500 group-hover:scale-105
-            "
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
 
@@ -97,16 +100,17 @@ export default function ProductCard({ product }) {
         <button
           onClick={handleWishlist}
           aria-label="Toggle wishlist"
-          className="
-            absolute top-3 right-3 h-9 w-9 rounded-full
-            bg-white/90 backdrop-blur flex items-center justify-center
-            shadow hover:scale-110 transition
-          "
+          className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow transition hover:scale-110"
         >
-          <span className="text-lg">♡</span>
+          <span
+            className={`text-lg transition ${
+              wishlisted ? "text-red-500 scale-110" : "text-gray-400"
+            }`}
+          >
+            {wishlisted ? "♥" : "♡"}
+          </span>
         </button>
 
-        {/* OUT OF STOCK OVERLAY (VARIANT-BASED) */}
         {variant.stock === 0 && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
             <span className="text-white text-sm font-semibold">
@@ -117,20 +121,18 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* CONTENT */}
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-3">
         <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
           {product.name}
         </h3>
 
-        {/* VARIANT SELECTOR */}
         <div className="flex gap-2 flex-wrap">
           {product.variants.map((v, i) => (
             <button
               key={i}
               disabled={v.stock === 0}
               onClick={() => setSelectedVariantIndex(i)}
-              className={`
-                px-3 py-1 rounded-full text-xs border transition
+              className={`px-3 py-1 rounded-full text-xs border transition
                 ${
                   i === selectedVariantIndex
                     ? "bg-orange-600 text-white border-orange-600"
@@ -144,14 +146,13 @@ export default function ProductCard({ product }) {
           ))}
         </div>
 
-        {/* PRICE */}
         <div className="flex items-center gap-2">
           <span className="text-lg font-bold text-orange-600">
             ₹{variant.price}
           </span>
+          <span className="text-xs text-gray-500">/ {variant.weight}</span>
         </div>
 
-        {/* STOCK INFO */}
         <div className="text-xs">
           {variant.stock > 0 ? (
             <span className="text-green-600">
@@ -162,12 +163,10 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* ADD TO CART */}
         <button
-          disabled={variant.stock === 0}
+          disabled={variant.stock === 0 || isAdding}
           onClick={handleAddToCart}
-          className={`
-            w-full mt-3 rounded-xl py-2.5 text-sm font-semibold transition
+          className={`w-full mt-3 rounded-xl py-2.5 text-sm font-semibold transition
             ${
               variant.stock > 0
                 ? "bg-orange-600 text-white hover:bg-orange-700"
@@ -175,7 +174,11 @@ export default function ProductCard({ product }) {
             }
           `}
         >
-          {variant.stock > 0 ? "Add to Cart" : "Unavailable"}
+          {isAdding
+            ? "Adding..."
+            : added
+            ? "✔ Added to Cart"
+            : "Add to Cart"}
         </button>
       </div>
     </div>
