@@ -6,31 +6,56 @@ import useCartCount from "@/Hooks/useCartCount";
 import { emitCartUpdate } from "@/utils/CartEvent";
 
 const MAX_QTY = 10;
+const FREE_SHIPPING_LIMIT = 499;
 
+/* ------------------ HELPERS ------------------ */
+const getEstimatedDelivery = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 5);
+  return d.toDateString();
+};
+
+/* ------------------ SKELETON ------------------ */
+const CartSkeleton = () => (
+  <div className="max-w-6xl mx-auto grid lg:grid-cols-3 gap-8 animate-pulse">
+    <div className="lg:col-span-2 space-y-4">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="bg-white p-6 rounded-xl border flex gap-4">
+          <div className="w-16 h-16 bg-gray-200 rounded" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-2/3" />
+            <div className="h-3 bg-gray-200 rounded w-1/3" />
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="bg-white p-6 rounded-xl border h-fit">
+      <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
+      <div className="h-3 bg-gray-200 rounded mb-2" />
+      <div className="h-3 bg-gray-200 rounded mb-4" />
+      <div className="h-10 bg-gray-200 rounded" />
+    </div>
+  </div>
+);
+
+/* ------------------ MAIN ------------------ */
 const Cart = () => {
   const navigate = useNavigate();
-  const {  getAuthHeader, isAuthenticated } = useAuth();
-
-  
-const { refetch } = useCartCount({ enabled: isAuthenticated });
-
+  const { getAuthHeader, isAuthenticated } = useAuth();
+  const { refetch } = useCartCount({ enabled: isAuthenticated });
 
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingKey, setUpdatingKey] = useState(null);
 
-  /* ================= FETCH CART ================= */
+  /* FETCH CART */
   const fetchCart = useCallback(async () => {
     if (!isAuthenticated) return;
-
     try {
-      setLoading(true);
       const { data } = await API.get("/api/cart", {
         headers: getAuthHeader(),
       });
       setCart(data.items || []);
-    } catch (err) {
-      console.error("Fetch cart failed", err);
     } finally {
       setLoading(false);
     }
@@ -40,8 +65,8 @@ const { refetch } = useCartCount({ enabled: isAuthenticated });
     fetchCart();
   }, [fetchCart]);
 
-  /* ================= TOTAL ================= */
-  const total = useMemo(
+  /* TOTAL */
+  const subtotal = useMemo(
     () =>
       cart.reduce(
         (sum, item) => sum + item.variant.price * item.quantity,
@@ -50,110 +75,70 @@ const { refetch } = useCartCount({ enabled: isAuthenticated });
     [cart]
   );
 
-  /* ================= UPDATE QTY ================= */
-  const updateQuantity = async (productId, weight, newQty) => {
-    if (newQty < 1 || newQty > MAX_QTY) return;
-
+  /* UPDATE QTY */
+  const updateQuantity = async (productId, weight, qty) => {
+    if (qty < 1 || qty > MAX_QTY) return;
     const key = `${productId}-${weight}`;
     setUpdatingKey(key);
 
-    try {
-      await API.patch(
-        "/api/cart/update",
-        { productId, weight, quantity: newQty },
-        { headers: getAuthHeader() }
-      );
+    await API.patch(
+      "/api/cart/update",
+      { productId, weight, quantity: qty },
+      { headers: getAuthHeader() }
+    );
 
-      setCart((prev) =>
-        prev.map((i) =>
-          i.product._id === productId && i.variant.weight === weight
-            ? { ...i, quantity: newQty }
-            : i
-        )
-      );
+    setCart((prev) =>
+      prev.map((i) =>
+        i.product._id === productId && i.variant.weight === weight
+          ? { ...i, quantity: qty }
+          : i
+      )
+    );
 
-      refetch?.();
-    } catch (err) {
-      console.error("Update quantity failed", err);
-    } finally {
-      setUpdatingKey(null);
-    }
+    setUpdatingKey(null);
+    refetch?.();
   };
 
-  /* ================= CHANGE VARIANT ================= */
-  const changeVariant = async (productId, oldWeight, newVariant) => {
-    const key = `${productId}-${oldWeight}`;
-    setUpdatingKey(key);
-
-    try {
-      await API.patch(
-        "/api/cart/update",
-        {
-          productId,
-          oldWeight,
-          variant: newVariant,
-        },
-        { headers: getAuthHeader() }
-      );
-
-      await fetchCart();
-      refetch?.();
-    } catch (err) {
-      console.error("Variant change failed", err);
-    } finally {
-      setUpdatingKey(null);
-    }
-  };
-
-  /* ================= REMOVE ITEM ================= */
+  /* REMOVE ITEM */
   const removeItem = async (productId, weight) => {
     const key = `${productId}-${weight}`;
     setUpdatingKey(key);
 
-    try {
-      await API.delete(`/api/cart/remove/${productId}`, {
-        headers: getAuthHeader(),
-        data: { weight },
-      });
+    await API.delete(`/api/cart/remove/${productId}`, {
+      headers: getAuthHeader(),
+      data: { weight },
+    });
 
-      setCart((prev) =>
-        prev.filter(
-          (i) =>
-            !(
-              i.product._id === productId &&
-              i.variant.weight === weight
-            )
-        )
-      );
+    setCart((prev) =>
+      prev.filter(
+        (i) =>
+          !(i.product._id === productId && i.variant.weight === weight)
+      )
+    );
 
-      refetch?.();
-      emitCartUpdate();
-    } catch (err) {
-      console.error("Remove item failed", err);
-    } finally {
-      setUpdatingKey(null);
-    }
+    setUpdatingKey(null);
+    refetch?.();
+    emitCartUpdate();
   };
 
-  /* ================= CHECKOUT ================= */
-  const handleCheckout = () => {
-    if (!cart.length) return;
-
-    if (!isAuthenticated) {
-      navigate("/login", { state: { from: "/checkout" } });
-      return;
-    }
-
-    navigate("/checkout");
+  /* CLEAR CART */
+  const clearCart = async () => {
+    if (!window.confirm("Clear entire cart?")) return;
+    await API.delete("/api/cart/clear", {
+      headers: getAuthHeader(),
+    });
+    setCart([]);
+    refetch?.();
+    emitCartUpdate();
   };
 
-  /* ================= STATES ================= */
+  /* STATES */
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Link
           to="/login"
-          className="px-6 py-3 bg-orange-600 text-white rounded-lg"
+          className="bg-orange-600 text-white px-6 py-3 rounded-lg"
         >
           Login to view cart
         </Link>
@@ -163,34 +148,39 @@ const { refetch } = useCartCount({ enabled: isAuthenticated });
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600">
-        Loading your cart…
+      <div className="min-h-screen bg-gray-50 py-10 px-4">
+        <CartSkeleton />
       </div>
     );
   }
 
   if (!cart.length) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-orange-50 px-4">
-        <h2 className="text-2xl font-bold text-gray-700 mb-4">
-          Your cart is empty 🛒
-        </h2>
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <p className="text-lg mb-4">Your cart is empty 🛒</p>
         <Link
           to="/products"
-          className="bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold"
+          className="bg-orange-600 text-white px-6 py-3 rounded-lg"
         >
-          Shop Products
+          Shop Now
         </Link>
       </div>
     );
   }
 
-  /* ================= UI ================= */
+  /* UI */
   return (
-    <div className="min-h-screen bg-orange-50 px-3 py-6">
-      <div className="max-w-5xl mx-auto grid lg:grid-cols-3 gap-6">
-        {/* CART ITEMS */}
-        <div className="lg:col-span-2 space-y-4">
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-3 gap-8">
+        {/* CART */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow border">
+          <div className="hidden md:grid grid-cols-4 px-6 py-4 border-b text-sm font-semibold text-gray-600">
+            <span>Product</span>
+            <span className="text-center">Price</span>
+            <span className="text-center">Quantity</span>
+            <span className="text-right">Subtotal</span>
+          </div>
+
           {cart.map(({ product, variant, quantity }) => {
             const key = `${product._id}-${variant.weight}`;
             const updating = updatingKey === key;
@@ -198,116 +188,110 @@ const { refetch } = useCartCount({ enabled: isAuthenticated });
             return (
               <div
                 key={key}
-                className="bg-white rounded-xl p-4 flex gap-4 items-start shadow-sm border"
+                className="grid md:grid-cols-4 gap-4 px-6 py-5 border-b items-center"
               >
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-20 h-20 rounded-lg object-cover"
-                />
-
-                <div className="flex-1 space-y-1">
-                  <p className="font-semibold text-sm line-clamp-2">
-                    {product.name}
-                  </p>
-
-                  <div className="flex gap-2 flex-wrap mt-1">
-                    {product.variants.map((v, i) => (
-                      <button
-                        key={i}
-                        disabled={v.stock === 0 || updating}
-                        onClick={() =>
-                          changeVariant(
-                            product._id,
-                            variant.weight,
-                            v
-                          )
-                        }
-                        className={`px-3 py-1 rounded-full text-xs border transition
-                          ${
-                            v.weight === variant.weight
-                              ? "bg-orange-600 text-white border-orange-600"
-                              : "bg-white text-gray-700"
-                          }
-                          ${v.stock === 0 ? "opacity-40" : ""}
-                        `}
-                      >
-                        {v.weight}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center gap-3 mt-2">
+                <div className="flex gap-4 items-center">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-16 h-16 rounded object-cover"
+                  />
+                  <div>
+                    <p className="font-semibold">{product.name}</p>
+                    <p className="text-xs text-gray-500">
+                      Weight: {variant.weight}
+                    </p>
                     <button
-                      disabled={updating || quantity === 1}
                       onClick={() =>
-                        updateQuantity(
-                          product._id,
-                          variant.weight,
-                          quantity - 1
-                        )
+                        removeItem(product._id, variant.weight)
                       }
-                      className="w-8 h-8 bg-gray-200 rounded"
+                      className="text-xs text-red-500 mt-1"
                     >
-                      −
-                    </button>
-
-                    <span className="font-semibold">{quantity}</span>
-
-                    <button
-                      disabled={updating || quantity === MAX_QTY}
-                      onClick={() =>
-                        updateQuantity(
-                          product._id,
-                          variant.weight,
-                          quantity + 1
-                        )
-                      }
-                      className="w-8 h-8 bg-gray-200 rounded"
-                    >
-                      +
+                      Remove
                     </button>
                   </div>
                 </div>
 
-                <div className="text-right space-y-2">
-                  <p className="font-bold">
-                    ₹{variant.price * quantity}
-                  </p>
+                <p className="text-center">₹{variant.price}</p>
+
+                <div className="flex justify-center items-center gap-2">
                   <button
-                    disabled={updating}
+                    disabled={quantity === 1 || updating}
                     onClick={() =>
-                      removeItem(product._id, variant.weight)
+                      updateQuantity(
+                        product._id,
+                        variant.weight,
+                        quantity - 1
+                      )
                     }
-                    className="text-xs text-red-500"
+                    className="w-8 h-8 border rounded"
                   >
-                    Remove
+                    −
+                  </button>
+                  <span>{quantity}</span>
+                  <button
+                    disabled={quantity === MAX_QTY || updating}
+                    onClick={() =>
+                      updateQuantity(
+                        product._id,
+                        variant.weight,
+                        quantity + 1
+                      )
+                    }
+                    className="w-8 h-8 border rounded"
+                  >
+                    +
                   </button>
                 </div>
+
+                <p className="text-right font-semibold">
+                  ₹{variant.price * quantity}
+                </p>
               </div>
             );
           })}
         </div>
 
         {/* SUMMARY */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border h-fit sticky top-20">
+        <div className="bg-white rounded-xl shadow border p-6 h-fit sticky top-20">
           <h3 className="text-lg font-bold mb-4">Order Summary</h3>
 
           <div className="flex justify-between text-sm mb-2">
             <span>Subtotal</span>
-            <span>₹{total}</span>
+            <span>₹{subtotal}</span>
           </div>
 
-          <div className="border-t pt-3 flex justify-between font-bold text-lg">
+          <div className="border-t mt-3 pt-3 flex justify-between font-bold">
             <span>Total</span>
-            <span>₹{total}</span>
+            <span>₹{subtotal}</span>
+          </div>
+
+          {subtotal >= FREE_SHIPPING_LIMIT ? (
+            <div className="mt-3 text-sm text-green-600">
+              🚚 Free shipping applied
+            </div>
+          ) : (
+            <div className="mt-3 text-sm text-gray-500">
+              Add ₹{FREE_SHIPPING_LIMIT - subtotal} more for free shipping
+            </div>
+          )}
+
+          <div className="mt-3 text-sm text-gray-600">
+            📦 Estimated delivery by <b>{getEstimatedDelivery()}</b>
           </div>
 
           <button
-            onClick={handleCheckout}
-            className="mt-5 w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700"
+            onClick={() => navigate("/checkout")}
+            className="mt-6 w-full bg-orange-600 text-white py-3 rounded-lg font-semibold"
           >
-            Proceed to Checkout →
+            Proceed to Checkout
+          </button>
+
+          <button
+            onClick={clearCart}
+            className="mt-3 w-full border border-red-500 text-red-600 py-2 rounded-lg text-sm"
+          >
+            Clear Shopping Cart
           </button>
         </div>
       </div>

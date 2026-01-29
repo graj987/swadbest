@@ -12,7 +12,6 @@ const Checkout = () => {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
 
-
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -41,8 +40,8 @@ const Checkout = () => {
   useEffect(() => {
     const raw = JSON.parse(localStorage.getItem("cart")) || [];
     if (!raw.length) return navigate("/cart");
-
     setCart(raw);
+
     setForm((f) => ({
       ...f,
       name: user?.name || "",
@@ -57,10 +56,13 @@ const Checkout = () => {
   /* ---------------- Fetch Addresses ---------------- */
   const fetchSaved = useCallback(async () => {
     try {
-      const res = await API.get("/api/address/getadd", { headers: getAuthHeader() });
+      const res = await API.get("/api/address/getadd", {
+        headers: getAuthHeader(),
+      });
+
       if (res.data.success) {
         setSavedAddresses(res.data.data);
-        if (res.data.data.length > 0) {
+        if (res.data.data.length) {
           setSelectedAddress(res.data.data[0]._id);
           setShowForm(false);
         } else {
@@ -68,7 +70,7 @@ const Checkout = () => {
         }
       }
     } catch {
-      toast.error("Failed to fetch addresses");
+      toast.error("Failed to load saved addresses");
     }
   }, [getAuthHeader]);
 
@@ -78,7 +80,7 @@ const Checkout = () => {
 
   /* ---------------- Price Preview ---------------- */
   const updatePricePreview = useCallback(async () => {
-    if (!selectedAddress || cart.length === 0) return;
+    if (!selectedAddress || !cart.length) return;
 
     try {
       const res = await API.post(
@@ -91,38 +93,82 @@ const Checkout = () => {
           addressId: selectedAddress,
           paymentMethod: form.paymentMethod,
         },
-        { headers: getAuthHeader() }
+        { headers: getAuthHeader() },
       );
 
-      if (res.data.success) {
-        setPricing(res.data);
-      }
+      if (res.data.success) setPricing(res.data);
     } catch {
-      toast.error("Failed to calculate pricing");
+      toast.error("Pricing calculation failed");
     }
-  }, [getAuthHeader ,selectedAddress, form.paymentMethod, cart]);
+  }, [getAuthHeader, selectedAddress, form.paymentMethod, cart]);
 
   useEffect(() => {
-    updatePricePreview();
-  }, [updatePricePreview]);
+    if (selectedAddress && form.paymentMethod) {
+      updatePricePreview();
+    }
+  }, [selectedAddress, form.paymentMethod, updatePricePreview]);
+
+  /* ---------------- Auto Detect Address ---------------- */
+  const detectLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error("Location not supported");
+      return;
+    }
+
+    toast.info("Detecting your location…");
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+          );
+          const data = await res.json();
+          const addr = data.address || {};
+
+          setForm((f) => ({
+            ...f,
+            city: addr.city || addr.town || "",
+            state: addr.state || "",
+            pincode: addr.postcode || "",
+          }));
+
+          toast.success("Location detected. Please verify address.");
+        } catch {
+          toast.error("Unable to fetch address");
+        }
+      },
+      () => toast.error("Location permission denied"),
+    );
+  };
 
   /* ---------------- Save Address ---------------- */
   const saveAddress = async () => {
-    const required = ["name", "phone", "house", "street", "pincode", "city", "state"];
+    const required = [
+      "name",
+      "phone",
+      "house",
+      "street",
+      "pincode",
+      "city",
+      "state",
+    ];
     for (const r of required) {
       if (!form[r]) return toast.error(`Missing ${r}`);
+    }
+    if (!/^\d{6}$/.test(form.pincode)) {
+      return toast.error("Invalid pincode");
     }
 
     try {
       setLoading(true);
-
       const res = await API.post("/api/address/add", form, {
         headers: getAuthHeader(),
       });
 
       if (!res.data.success) return toast.error(res.data.message);
-
-      toast.success("Address added");
+      toast.success("Address saved");
       await fetchSaved();
     } catch {
       toast.error("Failed to save address");
@@ -135,12 +181,11 @@ const Checkout = () => {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
 
-    if (!selectedAddress) return toast.error("Select address");
+    if (!selectedAddress) return toast.error("Select delivery address");
     if (!form.paymentMethod) return toast.error("Select payment method");
 
     try {
       setLoading(true);
-
       const res = await API.post(
         "/api/orders/postorders",
         {
@@ -151,20 +196,20 @@ const Checkout = () => {
           addressId: selectedAddress,
           paymentMethod: form.paymentMethod,
         },
-        { headers: getAuthHeader() }
+        { headers: getAuthHeader() },
       );
 
       const order = res.data?.data;
 
       if (form.paymentMethod === "COD") {
-        toast.success("Order placed");
+        toast.success("Order placed successfully");
         localStorage.removeItem("cart");
         return navigate("/orders");
       }
 
       await startRazorpay(order._id);
-    } catch (err) {
-      toast.error("Order failed",err);
+    } catch {
+      toast.error("Order placement failed");
     } finally {
       setLoading(false);
     }
@@ -175,7 +220,7 @@ const Checkout = () => {
     const rzRes = await API.post(
       "/api/payments/create-order",
       { orderId },
-      { headers: getAuthHeader() }
+      { headers: getAuthHeader() },
     );
 
     const rp = rzRes.data.razorpayOrder;
@@ -185,9 +230,21 @@ const Checkout = () => {
       amount: rp.amount,
       currency: "INR",
       name: "Swadbest",
+      description: "Secure Payment",
       order_id: rp.id,
-      handler: async () => {
-        toast.success("Payment successful");
+      handler: async (response) => {
+        await API.post(
+          "/api/payments/verify",
+          {
+            orderId,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature,
+          },
+          { headers: getAuthHeader() },
+        );
+
+        toast.success("Payment verified & order confirmed");
         localStorage.removeItem("cart");
         navigate("/orders");
       },
@@ -198,34 +255,36 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-orange-50 py-10 px-4">
       <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-orange-600 mb-6">Checkout</h2>
+        <h2 className="text-2xl font-bold text-orange-600 mb-6">
+          🧾 Secure Checkout
+        </h2>
 
-        <form onSubmit={handlePlaceOrder} className="grid md:grid-cols-2 gap-8">
+        <form
+          onSubmit={handlePlaceOrder}
+          className="grid md:grid-cols-2 gap-10"
+        >
+          {/* LEFT */}
+          <div className="space-y-6">
+            <h3 className="font-semibold text-lg">📍 Delivery Address</h3>
 
-          {/* LEFT: ADDRESS */}
-          <div className="space-y-4">
-            {/* List of saved addresses */}
             {savedAddresses.length > 0 && !showForm && (
               <div className="space-y-3">
-                <h3 className="font-semibold text-lg">Choose Delivery Address</h3>
-
                 {savedAddresses.map((a) => (
                   <div
                     key={a._id}
                     onClick={() => setSelectedAddress(a._id)}
-                    className={`p-3 rounded-lg border cursor-pointer transition ${
+                    className={`p-4 rounded-lg border cursor-pointer ${
                       selectedAddress === a._id
                         ? "border-orange-500 bg-orange-100"
                         : "border-gray-300"
                     }`}
                   >
                     <p className="font-semibold">{a.name}</p>
-                    <p className="text-sm">{a.house}, {a.street}</p>
-                    <p className="text-sm">{a.city} - {a.pincode}</p>
-                    <p className="text-xs text-gray-500">{a.state}</p>
+                    <p className="text-sm">
+                      {a.house}, {a.street}, {a.city} - {a.pincode}
+                    </p>
                   </div>
                 ))}
-
                 <button
                   type="button"
                   onClick={() => setShowForm(true)}
@@ -236,10 +295,26 @@ const Checkout = () => {
               </div>
             )}
 
-            {/* Address Form */}
             {showForm && (
               <div className="space-y-3 p-4 border rounded-xl bg-gray-50">
-                {["name", "phone", "house", "street", "landmark", "pincode", "city", "state"].map((f) => (
+                <button
+                  type="button"
+                  onClick={detectLocation}
+                  className="text-sm text-orange-600 font-semibold"
+                >
+                  📍 Auto-detect location
+                </button>
+
+                {[
+                  "name",
+                  "phone",
+                  "house",
+                  "street",
+                  "landmark",
+                  "pincode",
+                  "city",
+                  "state",
+                ].map((f) => (
                   <input
                     key={f}
                     name={f}
@@ -255,16 +330,15 @@ const Checkout = () => {
                   onClick={saveAddress}
                   className="w-full bg-orange-500 text-white py-3 rounded-lg"
                 >
-                  {loading ? "Saving..." : "Save Address"}
+                  Save Address
                 </button>
               </div>
             )}
 
-            {/* Payment Method */}
-            <div className="mt-4">
-              <h3 className="font-semibold text-lg">Payment Method</h3>
+            <div>
+              <h3 className="font-semibold text-lg">💳 Payment Method</h3>
 
-              <label className="flex items-center gap-2 mt-2">
+              <label className="flex gap-2 mt-2">
                 <input
                   type="radio"
                   name="paymentMethod"
@@ -272,79 +346,60 @@ const Checkout = () => {
                   checked={form.paymentMethod === "Online"}
                   onChange={onChange}
                 />
-                Online Payment
+                Online (UPI / Card / Wallet)
               </label>
 
-              {user?.codEligible ? (
-                <label className="flex items-center gap-2 mt-1">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="COD"
-                    checked={form.paymentMethod === "COD"}
-                    onChange={onChange}
-                  />
-                  Cash on Delivery
-                </label>
-              ) : (
-                <p className="text-xs text-gray-500 mt-1">COD unlocks after 2 deliveries</p>
-              )}
+              <label className="flex gap-2 mt-2">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="COD"
+                  checked={form.paymentMethod === "COD"}
+                  onChange={onChange}
+                />
+                Cash on Delivery
+              </label>
+
+              <p className="text-xs text-gray-500 mt-2">
+                🔒 100% secure • No card data stored
+              </p>
             </div>
           </div>
 
-          {/* RIGHT: ORDER SUMMARY */}
-          <div className="bg-orange-50 p-5 rounded-xl border shadow-md">
-            <h3 className="font-bold text-lg mb-3">Order Summary</h3>
+          {/* RIGHT */}
+          <div className="bg-orange-50 p-6 rounded-xl border shadow-md">
+            <h3 className="font-bold text-lg mb-3">🛍️ Order Summary</h3>
 
-            {/* Cart Items */}
-            <div className="space-y-3">
-              {cart.map((item) => (
-                <div
-                  key={item._id}
-                  className="flex items-center justify-between bg-white p-2 rounded-lg shadow-sm hover:scale-[1.02] transition"
-                >
-                  <img src={item.image} className="w-12 h-12 rounded-md border" />
-                  <div className="flex-1 ml-3">
-                    <p className="font-semibold text-sm">{item.name}</p>
-                    <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
-                  </div>
-                  <p className="font-semibold text-sm">₹{item.price * item.quantity}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Pricing Breakdown */}
-            <div className="text-sm mt-4 space-y-1 border-t pt-3">
+            <div className="text-sm space-y-2 border-t pt-3">
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>₹{pricing.subtotal}</span>
               </div>
               <div className="flex justify-between">
-                <span>GST (12%)</span>
+                <span>GST</span>
                 <span>₹{pricing.tax}</span>
               </div>
               <div className="flex justify-between">
-                <span>Delivery Charge</span>
+                <span>Delivery</span>
                 <span>₹{pricing.deliveryCharge}</span>
               </div>
-              {form.paymentMethod === "COD" && (
-                <div className="flex justify-between">
-                  <span>COD Charge</span>
-                  <span>₹{pricing.codCharge}</span>
-                </div>
-              )}
 
-              <div className="border-t pt-3 mt-3 font-bold text-lg flex justify-between">
-                <span>Total Payable</span>
+              <div className="border-t pt-3 font-bold text-lg flex justify-between">
+                <span>Total</span>
                 <span>₹{pricing.totalAmount}</span>
               </div>
+
+              <p className="text-xs text-gray-600 mt-2">
+                🚚 Estimated delivery in 3–6 days
+              </p>
             </div>
 
             <button
               type="submit"
-              className="w-full mt-5 bg-orange-500 text-white py-3 rounded-lg"
+              disabled={loading}
+              className="w-full mt-6 bg-orange-500 text-white py-3 rounded-lg font-semibold"
             >
-              {loading ? "Processing..." : "Place Order"}
+              {loading ? "Processing…" : "Place Order"}
             </button>
           </div>
         </form>

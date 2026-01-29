@@ -8,8 +8,15 @@ import Loader from "@/Components/Loader";
 import ProductCard from "@/Components/ProductCard";
 import "../Style/home.css";
 import { useNavigate } from "react-router-dom";
-
-
+import DealsOfTheDay from "@/Components/DealsOfTheDay";
+import FlashSale from "@/Components/FlashSell";
+import LatestOffers from "@/Components/LatestOffer";
+import AchwaniBenefits from "@/Components/AchawaniBenifits";
+import AchwaniUsage from "@/Components/AchawaniUsage";
+import AyurvedaTestimonials from "@/Components/AyurvedaTestimonials";
+import DigestiveComparison from "@/Components/DigestiveComparison";
+import LatestBlogs from "@/Components/LatestBlogs";
+import InstagramFollow from "@/Components/InstagramFollow";
 
 const Home = () => {
   const [hero, setHero] = useState({
@@ -19,9 +26,9 @@ const Home = () => {
     stock: 0,
   });
   const navigate = useNavigate();
-  const [featured,] = useState([]);
-  const [loading,] = useState(true);
-  const [error,] = useState("");
+  const [featured] = useState([]);
+  const [loading] = useState(true);
+  const [error] = useState("");
 
   const mountRef = useRef(null);
   const mouse = useRef({ x: 0 });
@@ -31,14 +38,12 @@ const Home = () => {
         const res = await API.get("/api/products/hero");
         setHero(res.data);
       } catch (err) {
-        err,
-        setHero(null);
+        (err, setHero(null));
       }
     };
 
     fetchHero();
   }, []);
-
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -51,7 +56,7 @@ const Home = () => {
       40,
       mount.clientWidth / mount.clientHeight,
       0.1,
-      100
+      100,
     );
     camera.position.set(0, 0.15, 4.5);
     camera.lookAt(0, 0, 0);
@@ -93,7 +98,7 @@ const Home = () => {
     /* ================= SHADOW PLANE ================= */
     const shadowPlane = new THREE.Mesh(
       new THREE.PlaneGeometry(3.6, 3.6),
-      new THREE.ShadowMaterial({ opacity: 0.35 })
+      new THREE.ShadowMaterial({ opacity: 0.35 }),
     );
     shadowPlane.rotation.x = -Math.PI / 2;
     shadowPlane.receiveShadow = true;
@@ -122,8 +127,7 @@ const Home = () => {
     /* ================= INTERACTION ================= */
     const onMouseMove = (e) => {
       const rect = mount.getBoundingClientRect();
-      mouse.current.x =
-        ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      mouse.current.x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
     };
     window.addEventListener("mousemove", onMouseMove);
 
@@ -153,8 +157,6 @@ const Home = () => {
     };
     animate();
 
-
-
     /* ================= CLEANUP ================= */
     return () => {
       cancelAnimationFrame(frameId);
@@ -179,12 +181,10 @@ const Home = () => {
           price: hero.price,
           stock: hero.stock,
         });
-
       } catch (err) {
         console.error("Failed to load product meta", err);
       }
     };
-
 
     fetchMeta();
   }, []);
@@ -202,20 +202,16 @@ const Home = () => {
     });
   };
 
-
-
   return (
     <main className="bg-white text-gray-800">
-
-     {hero &&(
-       <section className="relative h-screen overflow-hidden">
-
-        {/* BACKGROUND GRADIENT */}
-        {/* BACKGROUND GRADIENT */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `
+      {hero && (
+        <section className="relative h-screen overflow-hidden">
+          {/* BACKGROUND GRADIENT */}
+          {/* BACKGROUND GRADIENT */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `
       radial-gradient(
         circle at 50% 40%,
         oklch(0.65 0.12 65) 0%,
@@ -224,91 +220,83 @@ const Home = () => {
         oklch(0.20 0.10 25) 100%
       )
     `,
-          }}
-        />
+            }}
+          />
 
+          {/* SUBTLE TEXTURE */}
+          <div className="absolute inset-0 opacity-[0.04] bg-[url('/img/pattern-leaf.svg')] bg-repeat bg-[length:320px]" />
 
-        {/* SUBTLE TEXTURE */}
-        <div className="absolute inset-0 opacity-[0.04] bg-[url('/img/pattern-leaf.svg')] bg-repeat bg-[length:320px]" />
-
-
-        {/* PRODUCT SPOTLIGHT GLOW */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[480px] h-[480px] rounded-full bg-white/12 blur-[120px]" />
-        </div>
-
-
-        {/* CONTENT */}
-        <div className="relative z-10 h-full flex items-center justify-center text-white">
-
-          {/* LEFT TEXT */}
-          <div className="absolute left-6 md:left-16 top-1/2 -translate-y-1/2 max-w-sm hidden md:block">
-            <p className="text-xs uppercase tracking-widest text-white/60 mb-3">
-              Traditional • Homemade
-            </p>
-
-            <h1 className="text-5xl font-extrabold leading-tight">
-              Achwani <br />
-              <span className="text-white/90">Homemade Spice</span>
-            </h1>
-
-            <p className="text-white/80 mt-4 text-sm leading-relaxed">
-              Crafted in small batches using traditional recipes
-              and premium ingredients for authentic taste.
-            </p>
-
-            <p className="mt-3 text-xs text-white/60">
-              Net weight · {hero.weight}
-            </p>
-
+          {/* PRODUCT SPOTLIGHT GLOW */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-[480px] h-[480px] rounded-full bg-white/12 blur-[120px]" />
           </div>
 
-          {/* 3D PRODUCT */}
-          <div className="canvas-wrap relative z-10" ref={mountRef} />
+          {/* CONTENT */}
+          <div className="relative z-10 h-full flex items-center justify-center text-white">
+            {/* LEFT TEXT */}
+            <div className="absolute left-6 md:left-16 top-1/2 -translate-y-1/2 max-w-sm hidden md:block">
+              <p className="text-xs uppercase tracking-widest text-white/60 mb-3">
+                Traditional • Homemade
+              </p>
 
+              <h1 className="text-5xl font-extrabold leading-tight">
+                Achwani <br />
+                <span className="text-white/90">Homemade Spice</span>
+              </h1>
 
-          <div className="absolute right-6 md:right-16 top-1/2 -translate-y-1/2 hidden md:flex flex-col gap-3">
-            {["50g", "100g", "250g"].map((v) => (
-              <button
-              key={v}
-              disabled={hero.stock === 0}
-              className={`w-10 h-10 rounded-full text-xs font-semibold transition-all
+              <p className="text-white/80 mt-4 text-sm leading-relaxed">
+                Crafted in small batches using traditional recipes and premium
+                ingredients for authentic taste.
+              </p>
+
+              <p className="mt-3 text-xs text-white/60">
+                Net weight · {hero.weight}
+              </p>
+            </div>
+
+            {/* 3D PRODUCT */}
+            <div className="canvas-wrap relative z-10" ref={mountRef} />
+
+            <div className="absolute right-6 md:right-16 top-1/2 -translate-y-1/2 hidden md:flex flex-col gap-3">
+              {["50g", "100g", "250g"].map((v) => (
+                <button
+                  key={v}
+                  disabled={hero.stock === 0}
+                  className={`w-10 h-10 rounded-full text-xs font-semibold transition-all
                   ? "bg-white text-orange-700 shadow-lg scale-105"
                   : "border border-white/40 text-white/70 hover:bg-white/10 hover:scale-105"
                   }
         ${hero.stock === 0 ? "opacity-50 cursor-not-allowed" : ""}
       `}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-          {/* BOTTOM CTA */}
-          <div className="absolute bottom-6 right-6 md:right-16 flex items-center gap-5 -translate-y-12">
-            <span className="text-2xl font-bold tracking-tight">
-              ₹{hero.price}
-            </span>
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+            {/* BOTTOM CTA */}
+            <div className="absolute bottom-6 right-6 md:right-16 flex items-center gap-5 -translate-y-12">
+              <span className="text-2xl font-bold tracking-tight">
+                ₹{hero.price}
+              </span>
 
-            <button
-              disabled={hero.stock === 0}
-              onClick={handleBuy}
-              className={`
+              <button
+                disabled={hero.stock === 0}
+                onClick={handleBuy}
+                className={`
       px-7 py-3 rounded-full font-semibold transition-all
-      ${hero.stock === 0
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-white text-orange-700 shadow-xl hover:scale-105 hover:shadow-2xl"
-                  }
+      ${
+        hero.stock === 0
+          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+          : "bg-white text-orange-700 shadow-xl hover:scale-105 hover:shadow-2xl"
+      }
                   `}
-                  >
-              {hero.stock === 0 ? "Out of Stock" : "Buy Now"}
-            </button>
+              >
+                {hero.stock === 0 ? "Out of Stock" : "Buy Now"}
+              </button>
+            </div>
           </div>
-
-
-        </div>
-      </section>
-     )}
-
+        </section>
+      )}
 
       <section className="bg-gray-50 border-b">
         <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-sm">
@@ -319,17 +307,21 @@ const Home = () => {
         </div>
       </section>
 
-
-      <section className="py-14 px-5">
+      <section className="py-16 px-5 bg-white">
         <div className="max-w-6xl mx-auto">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
+                Featured Products
+              </h2>
+              <p className="text-gray-500 mt-1">
+                Our most loved and trusted picks
+              </p>
+            </div>
 
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">
-              Featured Products
-            </h2>
             <Link
               to="/products"
-              className="text-orange-600 font-medium hover:underline"
+              className="text-orange-600 font-semibold hover:text-orange-700 transition"
             >
               View All →
             </Link>
@@ -348,66 +340,43 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= BRAND PROMISE ================= */}
+      <section className="bg-gradient-to-b from-orange-50 to-white py-16">
+        <DealsOfTheDay />
+      </section>
+
+      <section className="bg-white py-16">
+        <FlashSale />
+      </section>
+
+      <section className="bg-gradient-to-b from-white to-orange-50 py-16">
+        <LatestOffers />
+      </section>
+
       <section className="bg-orange-50 py-16">
-        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-4">
-            <h2 className="text-3xl font-bold text-orange-700">
-              The SwadBest Promise
-            </h2>
-            <p className="text-gray-700 text-lg">
-              Every product is made in small batches using time-tested
-              recipes, premium ingredients, and strict hygiene standards.
-            </p>
-
-            <Link
-              to="/products"
-              className="inline-block mt-4 bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-700 transition"
-            >
-              Explore Products
-            </Link>
-          </div>
-
-          <div className="relative rounded-2xl overflow-hidden shadow-lg h-72">
-            <video
-              src="/video/product.mp4"
-              autoPlay
-              loop
-              muted
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/20"></div>
-          </div>
-        </div>
+        <AchwaniBenefits />
       </section>
 
-      {/* ================= FINAL CTA ================= */}
-      <section className="relative py-24 text-white text-center overflow-hidden">
-        <img
-          src="/images/cta.jpg"
-          alt="SwadBest"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/60"></div>
-
-        <div className="relative max-w-3xl mx-auto px-6">
-          <h2 className="text-4xl md:text-5xl font-extrabold">
-            Ready for <span className="text-orange-400">Real Homemade Taste?</span>
-          </h2>
-
-          <p className="text-lg text-gray-200 mt-6 mb-10">
-            Trusted by families who care about purity, taste, and health.
-          </p>
-
-          <Link
-            to="/products"
-            className="inline-flex items-center gap-3 bg-orange-600 px-10 py-4 rounded-full font-semibold hover:bg-orange-700 transition"
-          >
-            Start Shopping <span className="text-2xl">→</span>
-          </Link>
-        </div>
+      <section className="bg-white py-16">
+        <AchwaniUsage />
       </section>
 
+      <section className="bg-orange-50 py-16">
+        <AyurvedaTestimonials />
+      </section>
+
+      <section className="bg-white py-16">
+        <DigestiveComparison />
+      </section>
+
+      <section className="bg-gray-50 py-16">
+        <LatestBlogs />
+      </section>
+
+      <section className="py-20 px-5 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+        <div className="max-w-6xl mx-auto text-center">
+          <InstagramFollow />
+        </div>
+      </section>
     </main>
   );
 };
@@ -417,9 +386,5 @@ export default Home;
 /* -------- SMALL COMPONENT -------- */
 
 function TrustItem({ title }) {
-  return (
-    <div className="font-medium text-gray-700">
-      ✓ {title}
-    </div>
-  );
+  return <div className="font-medium text-gray-700">✓ {title}</div>;
 }

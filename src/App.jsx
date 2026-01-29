@@ -1,10 +1,6 @@
 // src/App.jsx
 import React from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import Layout from "./Layout/Layout";
 
@@ -42,7 +38,8 @@ import AboutUs from "./Pages/About";
 import PrivacyPolicy from "./Pages/PrivacyPolicy";
 import Terms from "./Pages/Terms";
 import RefundPolicy from "./Pages/Refund";
-
+import TrackOrder from "./Components/TrackOrder";
+import BlogDetails from "./Pages/BlogDetail";
 
 /* ---------------- Routes ---------------- */
 
@@ -69,29 +66,30 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/address" element={<Address />} />
-        <Route path="/about" element={<AboutUs/>}/>
-        <Route path="/privacy" element={<PrivacyPolicy/>}/>
-        <Route path="/terms" element={<Terms/>}/>
-        <Route path="/refund" element={<RefundPolicy/>}/>
-
-
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/refund" element={<RefundPolicy />} />
+        <Route path="/track/:awb" element={<TrackOrder />} />
 
         {/* Email / OTP (public) */}
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/verify" element={<Verify />} />
         <Route path="/verifyOtp" element={<VerifyOTP />} />
 
-
         {/* Recovery */}
         <Route path="/forgotpassword" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route path="/wishlist" 
-        element={
-          <ProtectedRoute>
-            <Wishlist/>
-          </ProtectedRoute>
-        }
+        <Route path="/blogs/:slug" element={<BlogDetails />} />
+
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          }
         />
 
         <Route
@@ -102,12 +100,13 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-       <Route path="/cart"
-        element={
-          <ProtectedRoute>
-            <Cart />
-          </ProtectedRoute>
-        } 
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          }
         />
 
         {/* Protected */}
@@ -127,11 +126,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/order/:id" element={
-          <ProtectedRoute>
-            <OrderDetails />
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/order/:id"
+          element={
+            <ProtectedRoute>
+              <OrderDetails />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/profile"

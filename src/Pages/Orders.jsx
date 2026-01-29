@@ -72,7 +72,6 @@ const Orders = () => {
   return (
     <div className="min-h-screen bg-orange-50 py-10 px-4">
       <div className="max-w-6xl mx-auto">
-
         <h2 className="text-3xl font-bold text-orange-600 mb-10 text-center">
           Your Orders
         </h2>
@@ -95,8 +94,7 @@ const Orders = () => {
 
         <div className="space-y-6">
           {orders.map((order) => {
-            const shippingStatus =
-              order.shipping?.status || order.orderStatus;
+            const shippingStatus = order.shipping?.status || order.orderStatus;
 
             return (
               <div
@@ -119,7 +117,7 @@ const Orders = () => {
                   <div className="flex gap-3">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-semibold ${paymentBadge(
-                        order.paymentStatus
+                        order.paymentStatus,
                       )}`}
                     >
                       {order.paymentStatus.toUpperCase()}
@@ -127,7 +125,7 @@ const Orders = () => {
 
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-semibold ${statusBadge(
-                        shippingStatus
+                        shippingStatus,
                       )}`}
                     >
                       {shippingStatus.toUpperCase()}
@@ -172,7 +170,6 @@ const Orders = () => {
                   </p>
 
                   <div className="flex flex-wrap gap-3">
-
                     {order.shipping?.trackingUrl && (
                       <a
                         href={order.shipping.trackingUrl}
@@ -200,29 +197,40 @@ const Orders = () => {
                       </button>
                     )}
 
-                    {order.orderStatus === "placed" &&
-                      !order.shipping?.awb && (
-                        <button
-                          onClick={async () => {
-                            if (
-                              !window.confirm(
-                                "Are you sure you want to cancel this order?"
-                              )
+                    {order.orderStatus === "placed" && !order.shipping?.awb && (
+                      <button
+                        onClick={async () => {
+                          if (
+                            !window.confirm(
+                              "Are you sure you want to cancel this order?",
                             )
-                              return;
+                          )
+                            return;
 
-                            await API.put(
-                              `/api/orders/${order._id}/cancel`,
+                          try {
+                            const res = await API.put(
+                              `/api/orders/cancel/${order._id}`,
                               {},
-                              { headers: getAuthHeader() }
+                              { headers: getAuthHeader() },
+                            );
+
+                            alert(
+                              res.data?.message ||
+                                "Order cancelled successfully",
                             );
                             navigate("/orders");
-                          }}
-                          className="bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-semibold shadow"
-                        >
-                          Cancel ❌
-                        </button>
-                      )}
+                          } catch (err) {
+                            const msg =
+                              err.response?.data?.message ||
+                              "Unable to cancel this order. It may already be shipped.";
+                            alert(msg);
+                          }
+                        }}
+                        className="bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-lg font-semibold shadow"
+                      >
+                        Cancel ❌
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

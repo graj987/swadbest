@@ -4,6 +4,7 @@ import API from "../api";
 import SafeImage from "../Components/SafeImage";
 import useAuth from "../Hooks/useAuth";
 import useCartCount from "../Hooks/useCartCount";
+import ProductTabs from "@/Components/ProductTab";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -15,39 +16,33 @@ const ProductDetail = () => {
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
-  const [error, setError] = useState("");
+  const [setError] = useState("");
 
-  /* ================= LOAD PRODUCT ================= */
   useEffect(() => {
     (async () => {
       try {
         const res = await API.get(`/api/products/${id}`);
         setProduct(res.data);
       } catch {
-        setError("Failed to load product details.");
+        setError("Failed to load product");
       } finally {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, setError]);
 
   const variant = product?.variants?.[selectedVariantIndex];
 
-  /* ================= ADD TO CART ================= */
   const handleAddToCart = async () => {
     if (!user) {
       navigate("/login");
       return;
     }
 
-    if (!variant || variant.stock === 0) {
-      alert("Please select an available variant");
-      return;
-    }
+    if (!variant || variant.stock === 0) return;
 
     try {
       setAdding(true);
-
       await API.post(
         "/api/cart/cart/add",
         {
@@ -59,75 +54,106 @@ const ProductDetail = () => {
             stock: variant.stock,
           },
         },
-        { headers: getAuthHeader() }
+        { headers: getAuthHeader() },
       );
-
       refetch?.();
     } catch (err) {
-      alert(err?.response?.data?.message || "Failed to add to cart");
+      alert("Failed to add to cart", err);
     } finally {
       setAdding(false);
     }
   };
 
-  /* ================= STATES ================= */
   if (loading) {
     return (
-      <div className="min-h-screen flex justify-center items-center bg-orange-50">
-        <p className="text-gray-600">Loading product...</p>
+      <div className="min-h-screen flex items-center justify-center bg-orange-50">
+        Loading product…
       </div>
     );
   }
 
-  if (error || !product || !variant) {
+  if (!product || !variant) {
     return (
-      <div className="min-h-screen flex justify-center items-center bg-orange-50">
-        <p className="text-red-500">{error || "Product not found."}</p>
+      <div className="min-h-screen flex items-center justify-center bg-orange-50 text-red-500">
+        Product not found
       </div>
     );
   }
 
-  /* ================= UI ================= */
   return (
-    <div className="min-h-screen bg-orange-50 pb-24">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 border mt-8 grid md:grid-cols-2 gap-8">
-
-        {/* IMAGE */}
-        <div className="flex flex-col items-center gap-4">
-          <div className="overflow-hidden rounded-xl shadow-md">
+    <div className="bg-orange-50 min-h-screen py-8">
+      <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-md p-6 md:p-8 grid md:grid-cols-2 gap-10">
+        {/* ================= LEFT: IMAGE ================= */}
+        <div className="flex flex-col items-center">
+          <div className="w-full aspect-square border rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center">
             <SafeImage
               src={product.image}
               alt={product.name}
-              className="rounded-xl w-full max-w-sm object-cover"
+              className="object-contain w-full h-full"
             />
+          </div>
+
+          {/* Thumbnails placeholder */}
+          <div className="flex gap-3 mt-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="w-16 h-16 border rounded-lg bg-gray-100"
+              />
+            ))}
           </div>
         </div>
 
-        {/* DETAILS */}
+        {/* ================= RIGHT: DETAILS ================= */}
         <div className="flex flex-col">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             {product.name}
           </h1>
 
-          <p className="text-xs text-gray-500 mb-3">
-            {product.category}
+          <p className="text-sm text-gray-500 mt-1">
+            Category: {product.category}
           </p>
 
-          <p className="text-gray-700 text-sm leading-relaxed mb-4">
+          {/* Rating placeholder */}
+          <div className="flex items-center gap-2 mt-3">
+            <span className="text-orange-500 font-semibold">★★★★☆</span>
+            <span className="text-xs text-gray-500">(Customer rating)</span>
+          </div>
+
+          {/* Price */}
+          <div className="mt-5 flex items-center gap-3">
+            <p className="text-3xl font-bold text-orange-600">
+              ₹{variant.price}
+            </p>
+            <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded text-xs font-semibold">
+              BEST PRICE
+            </span>
+          </div>
+
+          {/* Stock */}
+          <p className="mt-2 text-sm">
+            {variant.stock > 0 ? (
+              <span className="text-green-600">In stock</span>
+            ) : (
+              <span className="text-red-600">Out of stock</span>
+            )}
+          </p>
+
+          {/* Description */}
+          <p className="mt-4 text-sm text-gray-700 leading-relaxed">
             {product.description || "No description available."}
           </p>
 
-          {/* VARIANT SELECTOR */}
-          <div className="mb-4">
-            <p className="text-sm font-medium mb-2">Select Weight</p>
+          {/* Variant Selector */}
+          <div className="mt-6">
+            <p className="text-sm font-semibold mb-2">Select Weight</p>
             <div className="flex gap-2 flex-wrap">
               {product.variants.map((v, i) => (
                 <button
                   key={i}
-                  disabled={v.stock === 0}
                   onClick={() => setSelectedVariantIndex(i)}
-                  className={`
-                    px-3 py-1 rounded-full border text-sm transition
+                  disabled={v.stock === 0}
+                  className={`px-4 py-1.5 rounded-full border text-sm font-medium transition
                     ${
                       i === selectedVariantIndex
                         ? "bg-orange-600 text-white border-orange-600"
@@ -142,67 +168,47 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* PRICE */}
-          <div className="flex items-center gap-3 mb-3">
-            <p className="text-3xl font-extrabold text-orange-600">
-              ₹{variant.price}
-            </p>
-            <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-lg font-semibold">
-              BEST PRICE
-            </span>
-          </div>
-
-          {/* STOCK */}
-          <div className="text-sm mb-5">
-            {variant.stock > 0 ? (
-              <span className="text-green-600">
-                In stock ({variant.stock})
-              </span>
-            ) : (
-              <span className="text-red-600">Out of stock</span>
-            )}
-          </div>
-
-          {/* ACTIONS */}
-          <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+          {/* Actions */}
+          <div className="mt-8 flex flex-col sm:flex-row gap-4">
             <button
               onClick={handleAddToCart}
               disabled={variant.stock === 0 || adding}
-              className={`
-                flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition
+              className={`flex-1 py-3 rounded-lg font-semibold transition
                 ${
                   variant.stock > 0
                     ? "bg-orange-500 text-white hover:bg-orange-600"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-300 text-gray-500"
                 }
               `}
             >
-              {adding ? "Adding..." : "Add to Cart"}
+              {adding ? "Adding…" : "Add to Cart"}
             </button>
 
             <button
               onClick={() => navigate("/cart")}
-              className="flex-1 border border-orange-500 text-orange-600 px-6 py-3 rounded-lg text-sm font-semibold hover:bg-orange-100 transition"
+              className="flex-1 border border-orange-500 text-orange-600 py-3 rounded-lg font-semibold hover:bg-orange-100 transition"
             >
               Go to Cart →
             </button>
           </div>
         </div>
       </div>
+      <div className="max-w-6xl mx-auto mt-10 bg-white rounded-xl shadow-md">
+        <ProductTabs product={product} />
+      </div>
 
-      {/* MOBILE STICKY BAR */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 flex sm:hidden gap-3">
+      {/* ================= MOBILE STICKY BAR ================= */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-md p-4 flex gap-3 sm:hidden">
         <button
           onClick={handleAddToCart}
           disabled={variant.stock === 0 || adding}
-          className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-semibold text-sm"
+          className="flex-1 bg-orange-500 text-white py-3 rounded-lg font-semibold"
         >
-          {adding ? "Adding..." : "Add to Cart"}
+          {adding ? "Adding…" : "Add to Cart"}
         </button>
-
         <button
           onClick={() => navigate("/cart")}
-          className="flex-1 border border-orange-500 text-orange-600 py-3 rounded-lg font-semibold text-sm"
+          className="flex-1 border border-orange-500 text-orange-600 py-3 rounded-lg font-semibold"
         >
           Cart →
         </button>

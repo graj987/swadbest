@@ -1,4 +1,3 @@
-// src/pages/PayNow.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "@/api";
@@ -27,18 +26,14 @@ const PayNow = () => {
 
     const loadOrder = async () => {
       try {
-        const res = await API.get(
-          `/api/orders/${orderId}`,
-          { headers: getAuthHeader() }
-        );
+        const res = await API.get(`/api/orders/${orderId}`, {
+          headers: getAuthHeader(),
+        });
 
-        // ✅ FIX: backend returns { success, data }
         if (mounted) {
-          setOrder(res.data?.data || res.data);
+          setOrder(res.data?.data || null);
         }
       } catch (err) {
-        console.error(err);
-
         if (err.response?.status === 401) {
           logout();
           navigate("/login");
@@ -62,6 +57,11 @@ const PayNow = () => {
   /* ---------- Start Razorpay ---------- */
   const startPayment = async () => {
     if (!order || paying) return;
+
+    if (order.paymentStatus === "paid") {
+      navigate(`/order/${order._id}`);
+      return;
+    }
 
     if (!window.Razorpay) {
       setError("Payment service unavailable.");
@@ -96,7 +96,7 @@ const PayNow = () => {
               { headers: getAuthHeader() }
             );
 
-            if (verify.data?.ok) {
+            if (verify.data?.success) {
               navigate("/orders");
             } else {
               setError("Payment verification failed.");
@@ -158,35 +158,29 @@ const PayNow = () => {
           Complete Payment
         </h2>
 
-        {/* ADDRESS */}
         <div className="text-sm text-gray-700 mb-4">
           <div><b>Order ID:</b> {order._id}</div>
           <div>
-            <b>Deliver to:</b>{" "}
-            {address?.name}, {address?.phone}
+            <b>Deliver to:</b> {address?.name}, {address?.phone}
           </div>
           <div>
-            {address?.line1}, {address?.city} – {address?.pincode}
+            {address?.line1}, {address?.city}, {address?.state} –{" "}
+            {address?.pincode}
           </div>
         </div>
 
-        {/* PRODUCTS */}
         <div className="border rounded-xl p-4 mb-4 bg-orange-50">
-          {order.products.map((item) => {
-            const product = item.product;
-            if (!product) return null;
-
-            return (
-              <div key={item._id} className="flex justify-between py-2">
+          {Array.isArray(order.items) &&
+            order.items.map((item, idx) => (
+              <div key={idx} className="flex justify-between py-2">
                 <span>
-                  {product.name} × {item.quantity}
+                  {item.product?.name} × {item.quantity}
                 </span>
                 <span>
                   {formatCurrency(item.priceAtPurchase * item.quantity)}
                 </span>
               </div>
-            );
-          })}
+            ))}
 
           <div className="border-t pt-3 mt-3 flex justify-between font-bold">
             <span>Total</span>
