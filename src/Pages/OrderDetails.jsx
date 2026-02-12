@@ -6,6 +6,24 @@ import useAuth from "@/Hooks/useAuth";
 import { trackShipment } from "@/api/shipping";
 import OrderTimeline from "@/Components/OrderTimeline";
 
+/* ---------------- STATUS FORMATTER ---------------- */
+
+const readableStatus = (status) => {
+  if (!status) return "Processing";
+
+  status = status.toLowerCase();
+
+  if (status.includes("created")) return "Order Packed";
+  if (status.includes("shipped")) return "Picked Up";
+  if (status.includes("transit")) return "In Transit";
+  if (status.includes("out_for_delivery")) return "Out for Delivery";
+  if (status.includes("delivered")) return "Delivered";
+  if (status.includes("rto")) return "Returned";
+  if (status.includes("cancel")) return "Cancelled";
+
+  return "Processing";
+};
+
 const OrderDetails = () => {
   const { id } = useParams();
   const { getAuthHeader, logout } = useAuth();
@@ -14,6 +32,8 @@ const OrderDetails = () => {
   const [order, setOrder] = useState(null);
   const [tracking, setTracking] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  /* ---------------- FETCH ORDER ---------------- */
 
   const fetchOrder = useCallback(async () => {
     try {
@@ -35,18 +55,25 @@ const OrderDetails = () => {
     fetchOrder();
   }, [fetchOrder]);
 
+  /* ---------------- FETCH TRACKING (BY AWB) ---------------- */
+
   useEffect(() => {
     if (!order?.shipping?.awb) return;
 
     const fetchTracking = async () => {
-      const res = await trackShipment(order._id);
-      setTracking(res.data.tracking);
+      try {
+        const res = await trackShipment(order.shipping.awb); // ✅ correct identifier
+        setTracking(res.data?.data || null);
+      } catch {
+        console.warn("Tracking not available yet");
+      }
     };
 
     fetchTracking();
-    const interval = setInterval(fetchTracking, 15000);
+
+    const interval = setInterval(fetchTracking, 20000);
     return () => clearInterval(interval);
-  }, [order]);
+  }, [order?.shipping?.awb]);
 
   if (loading) {
     return (
@@ -64,22 +91,26 @@ const OrderDetails = () => {
     );
   }
 
-  const rawStatus =
-    tracking?.current_status || order.shipping?.status || order.orderStatus;
+  /* ---------------- DETERMINE SHIPPING STATUS ---------------- */
 
-  const shippingStatus = rawStatus.toUpperCase();
+  const rawStatus =
+    tracking?.tracking_data?.shipment_track?.[0]?.current_status ||
+    order.shipping?.status ||
+    "processing";
+
+  const shippingStatus = readableStatus(rawStatus);
   const heroItem = order.items?.[0];
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
-      {/* ================= HEADER ================= */}
+      {/* HEADER */}
       <div className="bg-gradient-to-r from-orange-700 to-orange-500 text-white">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <Link to="/orders" className="text-sm opacity-90">
             ← Back to Orders
           </Link>
 
-          <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="mt-4 flex justify-between items-center">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">
                 Order #{order._id.slice(-8)}
@@ -89,7 +120,7 @@ const OrderDetails = () => {
               </p>
             </div>
 
-            <span className="inline-block bg-white/20 px-4 py-2 rounded-full text-sm font-semibold">
+            <span className="bg-white/20 px-4 py-2 rounded-full text-sm font-semibold">
               {shippingStatus}
             </span>
           </div>
@@ -100,10 +131,7 @@ const OrderDetails = () => {
               onClick={async () => {
                 const res = await API.get(
                   `/api/orders/${order._id}/invoice`,
-                  {
-                    headers: getAuthHeader(),
-                    responseType: "blob",
-                  }
+                  { headers: getAuthHeader(), responseType: "blob" }
                 );
 
                 const url = URL.createObjectURL(
@@ -111,14 +139,14 @@ const OrderDetails = () => {
                 );
                 window.open(url, "_blank");
               }}
-              className="bg-white text-black px-5 py-2 rounded-full font-semibold text-sm"
+              className="bg-white text-black px-5 py-2 rounded-full text-sm font-semibold"
             >
               Download Invoice
             </button>
 
-            {order.shipping?.trackingUrl && (
+            {order.shipping?.awb && (
               <a
-                href={order.shipping.trackingUrl}
+                href={`https://shiprocket.co/tracking/${order.shipping.awb}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="border border-white/40 px-5 py-2 rounded-full text-sm"
@@ -130,62 +158,45 @@ const OrderDetails = () => {
         </div>
       </div>
 
-      {/* ================= MAIN CONTENT ================= */}
+      {/* SHIPMENT INFO */}
+      {order.shipping?.shipmentId && (
+        <div className="max-w-6xl mx-auto px-4 mt-6">
+          <div className="bg-white rounded-2xl p-5 shadow text-sm">
+            <p className="font-semibold">
+              Shipping Status: {shippingStatus}
+            </p>
+
+            {order.shipping?.awb ? (
+              <>
+                <p>AWB: <b>{order.shipping.awb}</b></p>
+                <p>Courier: {order.shipping.courierName || "Assigned"}</p>
+              </>
+            ) : (
+              <p>Your order is ready for courier pickup.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CONTENT */}
       <div className="max-w-6xl mx-auto px-4 mt-10 grid lg:grid-cols-3 gap-8">
-        {/* LEFT */}
         <div className="lg:col-span-2 space-y-8">
-          {/* TIMELINE */}
           <div className="bg-white rounded-2xl p-6 shadow">
-            <OrderTimeline status={rawStatus.toLowerCase()} />
+            <OrderTimeline status={shippingStatus.toLowerCase()} />
           </div>
 
-          {/* ADDRESS */}
           <div className="bg-white rounded-2xl p-6 shadow">
             <h3 className="text-lg font-semibold mb-3">Shipping Address</h3>
-            <p className="text-sm">{order.address.name}</p>
-            <p className="text-sm">{order.address.phone}</p>
-            <p className="text-sm text-gray-600">
+            <p>{order.address.name}</p>
+            <p>{order.address.phone}</p>
+            <p className="text-gray-600">
               {order.address.line1}, {order.address.city},{" "}
               {order.address.state} – {order.address.pincode}
             </p>
           </div>
-
-          {/* ITEMS */}
-          <div className="bg-white rounded-2xl p-6 shadow">
-            <h3 className="text-lg font-semibold mb-4">Items</h3>
-            <div className="space-y-4">
-              {order.items.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between items-center border-b pb-3 last:border-0"
-                >
-                  <div className="flex items-center gap-4">
-                    <SafeImage
-                      src={item.product?.image}
-                      alt={item.product?.name}
-                      className="w-14 h-14 rounded-lg"
-                    />
-                    <div>
-                      <p className="font-medium text-sm">
-                        {item.product?.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {item.quantity} × ₹{item.priceAtPurchase}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="font-semibold text-sm">
-                    ₹{item.quantity * item.priceAtPurchase}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
-        {/* RIGHT */}
         <div className="space-y-8">
-          {/* PRODUCT */}
           {heroItem && (
             <div className="bg-white rounded-2xl p-6 shadow text-center">
               <SafeImage
@@ -193,22 +204,9 @@ const OrderDetails = () => {
                 alt={heroItem.product?.name}
                 className="w-40 mx-auto"
               />
-              <p className="mt-3 font-medium text-sm">
-                {heroItem.product?.name}
-              </p>
+              <p className="mt-3">{heroItem.product?.name}</p>
             </div>
           )}
-
-          {/* PAYMENT */}
-          <div className="bg-white rounded-2xl p-6 shadow">
-            <h3 className="text-lg font-semibold mb-2">Payment</h3>
-            <p className="text-sm">
-              Method: <b>{order.paymentMethod}</b>
-            </p>
-            <p className="text-sm mt-1">
-              Amount: <b>₹{order.totalAmount}</b>
-            </p>
-          </div>
         </div>
       </div>
     </div>

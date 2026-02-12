@@ -6,6 +6,7 @@ import {
   XCircle,
 } from "lucide-react";
 
+/* -------- ORDER FLOW (BUSINESS LEVEL, NOT COURIER EVENTS) -------- */
 const TIMELINE = [
   "placed",
   "preparing",
@@ -15,15 +16,17 @@ const TIMELINE = [
   "delivered",
 ];
 
+/* -------- LABELS SHOWN TO USER -------- */
 const LABELS = {
   placed: "Order Placed",
   preparing: "Preparing Order",
-  shipped: "Shipped",
+  shipped: "Picked Up by Courier",
   in_transit: "In Transit",
   out_for_delivery: "Out for Delivery",
   delivered: "Delivered",
 };
 
+/* -------- ICONS -------- */
 const ICONS = {
   placed: Package,
   preparing: Package,
@@ -35,16 +38,38 @@ const ICONS = {
   rto: XCircle,
 };
 
-/* 🔒 HARD NORMALIZATION (REAL SHIPROCKET SAFE) */
+/* -------- HARD MAPPING (REAL SHIPROCKET EVENTS) -------- */
 const normalizeStatus = (status = "") => {
   const s = status.toLowerCase().trim();
 
+  /* terminal */
   if (s.includes("cancel")) return "cancelled";
-  if (s.includes("rto")) return "rto";
-  if (s.includes("deliver")) return "delivered";
-  if (s.includes("out")) return "out_for_delivery";
-  if (s.includes("transit")) return "in_transit";
-  if (s.includes("ship")) return "shipped";
+  if (s.includes("rto") || s.includes("return")) return "rto";
+  if (s.includes("delivered")) return "delivered";
+
+  /* delivery stage */
+  if (s.includes("out for delivery")) return "out_for_delivery";
+
+  /* movement stage */
+  if (
+    s.includes("in transit") ||
+    s.includes("reached") ||
+    s.includes("hub") ||
+    s.includes("bagged") ||
+    s.includes("departed")
+  )
+    return "in_transit";
+
+  /* pickup stage */
+  if (
+    s.includes("picked") ||
+    s.includes("manifest") ||
+    s.includes("booked") ||
+    s.includes("assigned")
+  )
+    return "shipped";
+
+  /* before courier handover */
   if (s.includes("prepar")) return "preparing";
 
   return "placed";
@@ -53,7 +78,7 @@ const normalizeStatus = (status = "") => {
 export default function OrderTimeline({ status }) {
   const normalized = normalizeStatus(status);
 
-  /* ❌ CANCEL / RTO — STOP EVERYTHING */
+  /* ---------- CANCEL / RTO VIEW ---------- */
   if (["cancelled", "rto"].includes(normalized)) {
     const Icon = ICONS[normalized];
     return (
@@ -74,13 +99,11 @@ export default function OrderTimeline({ status }) {
   }
 
   let activeIndex = TIMELINE.indexOf(normalized);
-
-  /* 🛡️ SAFETY NET */
   if (activeIndex < 0) activeIndex = 0;
 
   return (
     <div className="relative pl-8 space-y-8">
-      {/* Vertical line */}
+      {/* vertical progress line */}
       <div className="absolute left-[18px] top-0 bottom-0 w-[2px] bg-gray-200" />
 
       {TIMELINE.map((step, idx) => {
@@ -90,10 +113,8 @@ export default function OrderTimeline({ status }) {
 
         return (
           <div key={step} className="relative flex gap-4">
-            {/* DOT */}
             <div
               className={`w-9 h-9 rounded-full flex items-center justify-center border-2
-              transition-all duration-300
               ${
                 active
                   ? "bg-orange-500 border-orange-500"
@@ -106,7 +127,6 @@ export default function OrderTimeline({ status }) {
               />
             </div>
 
-            {/* TEXT */}
             <div>
               <p
                 className={`font-medium ${
