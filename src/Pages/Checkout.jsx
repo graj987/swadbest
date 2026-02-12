@@ -38,16 +38,33 @@ const Checkout = () => {
 
   /* ---------------- Load Cart ---------------- */
   useEffect(() => {
-    const raw = JSON.parse(localStorage.getItem("cart")) || [];
-    if (!raw.length) return navigate("/cart");
-    setCart(raw);
+    const loadCart = async () => {
+      try {
+        const res = await API.get("/api/cart", {
+          headers: getAuthHeader(),
+        });
 
-    setForm((f) => ({
-      ...f,
-      name: user?.name || "",
-      phone: user?.phone || "",
-    }));
-  }, [navigate, user]);
+        const items = res.data?.items || [];
+
+        if (!items.length) {
+          navigate("/cart");
+          return;
+        }
+
+        setCart(items);
+      } catch {
+        toast.error("Failed to load cart");
+      }
+
+      setForm((f) => ({
+        ...f,
+        name: user?.name || "",
+        phone: user?.phone || "",
+      }));
+    };
+
+    loadCart();
+  }, [navigate, user, getAuthHeader]);
 
   /* ---------------- Input Change ---------------- */
   const onChange = (e) =>
@@ -87,16 +104,33 @@ const Checkout = () => {
         "/api/orders/price-preview",
         {
           products: cart.map((i) => ({
-            product: i._id,
+            product: i.product?._id,
+            variantIndex:
+              i.variantIndex ??
+              i.product?.variants?.findIndex(
+                (v) => v.weight === i.variant?.weight,
+              ) ??
+              0,
             quantity: i.quantity,
           })),
+
           addressId: selectedAddress,
           paymentMethod: form.paymentMethod,
         },
         { headers: getAuthHeader() },
       );
 
-      if (res.data.success) setPricing(res.data);
+      if (res.data?.success && res.data?.data) {
+        setPricing(res.data.data);
+      } else {
+        setPricing({
+          subtotal: 0,
+          tax: 0,
+          deliveryCharge: 0,
+          codCharge: 0,
+          totalAmount: 0,
+        });
+      }
     } catch {
       toast.error("Pricing calculation failed");
     }
@@ -190,9 +224,16 @@ const Checkout = () => {
         "/api/orders/postorders",
         {
           products: cart.map((i) => ({
-            product: i._id,
+            product: i.product?._id,
+            variantIndex:
+              i.variantIndex ??
+              i.product?.variants?.findIndex(
+                (v) => v.weight === i.variant?.weight,
+              ) ??
+              0,
             quantity: i.quantity,
           })),
+
           addressId: selectedAddress,
           paymentMethod: form.paymentMethod,
         },
@@ -373,7 +414,7 @@ const Checkout = () => {
             <div className="text-sm space-y-2 border-t pt-3">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>₹{pricing.subtotal}</span>
+                <span>₹{pricing?.subtotal || 0}</span>
               </div>
               <div className="flex justify-between">
                 <span>GST</span>

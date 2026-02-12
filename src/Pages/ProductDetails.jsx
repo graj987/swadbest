@@ -44,7 +44,7 @@ const ProductDetail = () => {
     try {
       setAdding(true);
       await API.post(
-        "/api/cart/cart/add",
+        "/api/cart/add",
         {
           productId: product._id,
           quantity: 1,

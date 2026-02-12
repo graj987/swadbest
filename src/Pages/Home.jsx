@@ -17,6 +17,7 @@ import AyurvedaTestimonials from "@/Components/AyurvedaTestimonials";
 import DigestiveComparison from "@/Components/DigestiveComparison";
 import LatestBlogs from "@/Components/LatestBlogs";
 import InstagramFollow from "@/Components/InstagramFollow";
+import ProductCardSkeleton from "@/Components/ProductSkeleton";
 
 const Home = () => {
   const [hero, setHero] = useState({
@@ -26,9 +27,9 @@ const Home = () => {
     stock: 0,
   });
   const navigate = useNavigate();
-  const [featured] = useState([]);
-  const [loading] = useState(true);
-  const [error] = useState("");
+  const [featured, setFeatured] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const mountRef = useRef(null);
   const mouse = useRef({ x: 0 });
@@ -201,39 +202,96 @@ const Home = () => {
       },
     });
   };
+useEffect(() => {
+  let isMounted = true;
+
+  const loadFeatured = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await API.get("/api/products/featured");
+
+      const list =
+        res?.data?.data ||
+        res?.data ||
+        [];
+
+      if (isMounted) {
+        setFeatured(Array.isArray(list) ? list : []);
+      }
+    } catch (err) {
+      console.error("Featured fetch failed:", err);
+
+      if (isMounted) {
+        setError("Failed to load featured products");
+      }
+    } finally {
+      if (isMounted) {
+        setLoading(false);
+      }
+    }
+  };
+
+  loadFeatured();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
 
   return (
     <main className="bg-white text-gray-800">
       {hero && (
-        <section className="relative h-screen overflow-hidden">
-          {/* BACKGROUND GRADIENT */}
-          {/* BACKGROUND GRADIENT */}
+        <section className="relative min-h-[100svh] overflow-hidden">
+          {/* BACKGROUND */}
           <div
             className="absolute inset-0"
             style={{
               background: `
-      radial-gradient(
-        circle at 50% 40%,
-        oklch(0.65 0.12 65) 0%,
-        oklch(0.54 0.10 48) 35%,
-        oklch(0.30 0.12 28) 70%,
-        oklch(0.20 0.10 25) 100%
-      )
-    `,
+          radial-gradient(
+            circle at 50% 40%,
+            oklch(0.65 0.12 65) 0%,
+            oklch(0.54 0.10 48) 35%,
+            oklch(0.30 0.12 28) 70%,
+            oklch(0.20 0.10 25) 100%
+          )
+        `,
             }}
           />
 
-          {/* SUBTLE TEXTURE */}
-          <div className="absolute inset-0 opacity-[0.04] bg-[url('/img/pattern-leaf.svg')] bg-repeat bg-[length:320px]" />
+          {/* TEXTURE */}
+          <div className="absolute inset-0 opacity-[0.04] bg-[url('/img/pattern-leaf.svg')] bg-repeat bg-[length:320px] pointer-events-none" />
 
-          {/* PRODUCT SPOTLIGHT GLOW */}
+          {/* GLOW */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-[480px] h-[480px] rounded-full bg-white/12 blur-[120px]" />
           </div>
 
           {/* CONTENT */}
           <div className="relative z-10 h-full flex items-center justify-center text-white">
-            {/* LEFT TEXT */}
+            {/* 🔹 MOBILE TEXT (NEW, DESKTOP UNCHANGED) */}
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 text-center max-w-sm px-4 md:hidden">
+              <p className="text-xs uppercase tracking-widest text-white/70 mb-2">
+                Traditional • Homemade
+              </p>
+
+              <h1 className="text-3xl font-extrabold leading-tight">
+                Achwani <br />
+                <span className="text-white/90">Homemade Spice</span>
+              </h1>
+
+              <p className="text-white/80 mt-3 text-sm">
+                Crafted in small batches using traditional recipes.
+              </p>
+
+              <p className="mt-2 text-xs text-white/60">
+                Net weight · {hero.weight}
+              </p>
+            </div>
+
+            {/* 🔹 DESKTOP TEXT (UNCHANGED) */}
             <div className="absolute left-6 md:left-16 top-1/2 -translate-y-1/2 max-w-sm hidden md:block">
               <p className="text-xs uppercase tracking-widest text-white/60 mb-3">
                 Traditional • Homemade
@@ -254,28 +312,37 @@ const Home = () => {
               </p>
             </div>
 
-            {/* 3D PRODUCT */}
-            <div className="canvas-wrap relative z-10" ref={mountRef} />
+            {/* 3D PRODUCT (RESPONSIVE SIZE) */}
+            <div
+              ref={mountRef}
+              className="
+              mt-70 md:mt-0
+          relative z-10
+          w-[260px] h-[260px]
+          sm:w-[300px] sm:h-[300px]
+          md:w-[420px] md:h-[420px]
+          lg:w-[520px] lg:h-[520px]
+        "
+            />
 
-            <div className="absolute right-6 md:right-16 top-1/2 -translate-y-1/2 hidden md:flex flex-col gap-3">
-              {["50g", "100g", "250g"].map((v) => (
-                <button
-                  key={v}
-                  disabled={hero.stock === 0}
-                  className={`w-10 h-10 rounded-full text-xs font-semibold transition-all
-                  ? "bg-white text-orange-700 shadow-lg scale-105"
-                  : "border border-white/40 text-white/70 hover:bg-white/10 hover:scale-105"
-                  }
-        ${hero.stock === 0 ? "opacity-50 cursor-not-allowed" : ""}
-      `}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
-            {/* BOTTOM CTA */}
-            <div className="absolute bottom-6 right-6 md:right-16 flex items-center gap-5 -translate-y-12">
-              <span className="text-2xl font-bold tracking-tight">
+            {/* CTA */}
+            <div
+              className="
+          fixed md:absolute
+          bottom-16 md:bottom-6
+          left-1/2 md:left-auto
+          right-auto md:right-16
+          -translate-x-1/2 md:translate-x-0
+          flex items-center gap-4
+          bg-white/90 md:bg-transparent
+          backdrop-blur md:backdrop-blur-0
+          px-4 py-3 md:p-0
+          rounded-full md:rounded-none
+          shadow-lg md:shadow-none
+          z-[9999]
+        "
+            >
+              <span className="text-lg md:text-2xl font-bold text-gray-900 md:text-white">
                 ₹{hero.price}
               </span>
 
@@ -283,13 +350,13 @@ const Home = () => {
                 disabled={hero.stock === 0}
                 onClick={handleBuy}
                 className={`
-      px-7 py-3 rounded-full font-semibold transition-all
-      ${
-        hero.stock === 0
-          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-          : "bg-white text-orange-700 shadow-xl hover:scale-105 hover:shadow-2xl"
-      }
-                  `}
+            px-6 py-3 rounded-full font-semibold transition-all
+            ${
+              hero.stock === 0
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-orange-600 text-white active:scale-95 md:bg-white md:text-orange-700 md:hover:scale-105"
+            }
+          `}
               >
                 {hero.stock === 0 ? "Out of Stock" : "Buy Now"}
               </button>
@@ -299,7 +366,7 @@ const Home = () => {
       )}
 
       <section className="bg-gray-50 border-b">
-        <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-sm">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center text-sm">
           <TrustItem title="Hygienically Prepared" />
           <TrustItem title="No Preservatives" />
           <TrustItem title="FSSAI Certified" />
@@ -327,10 +394,23 @@ const Home = () => {
             </Link>
           </div>
 
-          {loading && <Loader text="Loading fresh products..." />}
+          {loading && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          )}
+
           {error && <p className="text-red-500 text-center">{error}</p>}
 
-          {!loading && featured.length > 0 && (
+          {!loading && !error && featured.length === 0 && (
+            <p className="text-center text-gray-500">
+              No featured products available
+            </p>
+          )}
+
+          {!loading && !error && featured.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
               {featured.map((p) => (
                 <ProductCard key={p._id} product={p} />

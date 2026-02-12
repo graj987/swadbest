@@ -3,50 +3,64 @@ import { useNavigate } from "react-router-dom";
 import API from "@/api";
 
 const LatestOffers = () => {
-  const [offers, setOffers] = useState([]);
+  const [products, setProducts] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    API.get("/api/offers/active").then((res) => {
-      const latest = res.data.data.filter(o => o.type === "latest");
-      setOffers(latest);
-    });
+    API.get("/api/products/latest")
+      .then((res) => {
+        setProducts(res.data.data || []);
+      })
+      .catch((err) => {
+        console.error("Failed to load latest products", err);
+      });
   }, []);
 
-  if (!offers.length) return null;
+  if (!products.length) return null;
 
   return (
     <section className="bg-white py-14 px-4">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-extrabold text-orange-600 mb-8">
-          🎁 Latest Offers
+          Latest Arrivals
         </h2>
 
         <div className="grid md:grid-cols-4 gap-6">
-          {offers.map((o) => (
-            <div
-              key={o._id}
-              className="border rounded-xl overflow-hidden hover:shadow-md transition"
-            >
-              <img
-                src={o.image}
-                alt={o.title}
-                className="h-36 w-full object-cover"
-              />
+          {products.map((p) => {
+            const firstVariant = p.variants?.[0];
 
-              <div className="p-4">
-                <p className="font-semibold">{o.title}</p>
-                <p className="text-xs text-gray-500">{o.subtitle}</p>
+            return (
+              <div
+                key={p._id}
+                className="border rounded-xl overflow-hidden hover:shadow-md transition"
+              >
+                <img
+                  src={p.image || p.images?.[0]}
+                  alt={p.name}
+                  className="h-36 w-full object-cover"
+                />
 
-                <button
-                  onClick={() => navigate(`/product/${o.product._id}`)}
-                  className="mt-3 text-sm text-orange-600 font-semibold"
-                >
-                  Shop Now →
-                </button>
+                <div className="p-4">
+                  <p className="font-semibold">{p.name}</p>
+
+                  <p className="text-xs text-gray-500">
+                    {firstVariant?.weight || ""}
+                  </p>
+
+                  <p className="text-sm font-bold text-orange-600 mt-1">
+                    ₹{firstVariant?.price || 0}
+                  </p>
+
+                  <button
+                    onClick={() => navigate(`/product/${p._id}`)}
+                    className="mt-3 text-sm text-orange-600 font-semibold"
+                  >
+                    Shop Now →
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

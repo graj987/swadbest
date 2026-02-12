@@ -55,7 +55,16 @@ const Cart = () => {
       const { data } = await API.get("/api/cart", {
         headers: getAuthHeader(),
       });
-      setCart(data.items || []);
+      const normalized = (data.items || []).map((i) => ({
+  ...i,
+  variantIndex:
+    i.variantIndex ??
+    i.product?.variants?.findIndex(v => v.weight === i.variant?.weight) ??
+    0,
+}));
+
+setCart(normalized);
+
     } finally {
       setLoading(false);
     }
@@ -65,15 +74,19 @@ const Cart = () => {
     fetchCart();
   }, [fetchCart]);
 
-  /* TOTAL */
-  const subtotal = useMemo(
-    () =>
-      cart.reduce(
-        (sum, item) => sum + item.variant.price * item.quantity,
-        0
-      ),
-    [cart]
-  );
+ const subtotal = useMemo(
+  () =>
+    cart.reduce((sum, item) => {
+      const price =
+        item.variant?.price ??
+        item.product?.variants?.[item.variantIndex ?? 0]?.price ??
+        0;
+
+      return sum + price * item.quantity;
+    }, 0),
+  [cart]
+);
+
 
   /* UPDATE QTY */
   const updateQuantity = async (productId, weight, qty) => {
@@ -83,7 +96,8 @@ const Cart = () => {
 
     await API.patch(
       "/api/cart/update",
-      { productId, weight, quantity: qty },
+     { productId, weight, variantIndex: cart.find(i => i.product._id === productId && i.variant.weight === weight)?.variantIndex, quantity: qty },
+
       { headers: getAuthHeader() }
     );
 
@@ -106,7 +120,11 @@ const Cart = () => {
 
     await API.delete(`/api/cart/remove/${productId}`, {
       headers: getAuthHeader(),
-      data: { weight },
+      data: {
+  weight,
+  variantIndex: cart.find(i => i.product._id === productId && i.variant.weight === weight)?.variantIndex
+},
+
     });
 
     setCart((prev) =>
