@@ -21,6 +21,27 @@ const statusBadge = (status) => {
   }
 };
 
+const shippingLabel = (status) => {
+  switch (status) {
+    case "created":
+      return "Shipment Created";
+    case "shipped":
+      return "Picked Up";
+    case "in_transit":
+      return "In Transit";
+    case "out_for_delivery":
+      return "Out for Delivery";
+    case "delivered":
+      return "Delivered";
+    case "cancelled":
+    case "rto":
+      return "Returned / Cancelled";
+    default:
+      return "Processing";
+  }
+};
+
+
 const paymentBadge = (status) => {
   switch (status) {
     case "paid":
@@ -94,7 +115,10 @@ const Orders = () => {
 
         <div className="space-y-6">
           {orders.map((order) => {
-            const shippingStatus = order.shipping?.status || order.orderStatus;
+           const shippingStatus = order.shipping?.awb
+  ? order.shipping.status
+  : "processing";
+
 
             return (
               <div
@@ -128,12 +152,40 @@ const Orders = () => {
                         shippingStatus,
                       )}`}
                     >
-                      {shippingStatus.toUpperCase()}
+                      {shippingLabel(shippingStatus)}
+
                     </span>
                   </div>
                 </div>
 
                 <div className="mt-4 space-y-4">
+                  {order.shipping?.shipmentId && (
+  <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl">
+    <p className="font-semibold text-blue-900 mb-1">
+      🚚 Shipping Status: {shippingLabel(order.shipping.status)}
+    </p>
+
+    {!order.shipping?.awb && (
+      <p className="text-sm text-blue-700">
+        Your order is packed and waiting for courier pickup.
+      </p>
+    )}
+
+    {order.shipping?.awb && (
+      <>
+        <p className="text-sm text-blue-800">
+          AWB Number:{" "}
+          <span className="font-semibold">{order.shipping.awb}</span>
+        </p>
+
+        <p className="text-xs text-blue-700 mt-1">
+          Courier: {order.shipping.courierName || "Assigned"}
+        </p>
+      </>
+    )}
+  </div>
+)}
+
                   {Array.isArray(order.items) &&
                     order.items.map((item, idx) => (
                       <div
@@ -170,16 +222,16 @@ const Orders = () => {
                   </p>
 
                   <div className="flex flex-wrap gap-3">
-                    {order.shipping?.trackingUrl && (
-                      <a
-                        href={order.shipping.trackingUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-lg font-semibold shadow"
-                      >
-                        Track Order
-                      </a>
-                    )}
+                    {order.shipping?.awb && (
+  <a
+    href={`https://shiprocket.co/tracking/${order.shipping.awb}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-lg font-semibold shadow"
+  >
+    Track Shipment
+  </a>
+)}
 
                     <Link
                       to={`/order/${order._id}`}
@@ -197,7 +249,7 @@ const Orders = () => {
                       </button>
                     )}
 
-                    {order.orderStatus === "placed" && !order.shipping?.awb && (
+                    {order.orderStatus === "placed" && !order.shipping?.shipmentId && (
                       <button
                         onClick={async () => {
                           if (

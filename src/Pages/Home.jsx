@@ -202,44 +202,40 @@ const Home = () => {
       },
     });
   };
-useEffect(() => {
-  let isMounted = true;
+  useEffect(() => {
+    let isMounted = true;
 
-  const loadFeatured = async () => {
-    try {
-      setLoading(true);
-      setError("");
+    const loadFeatured = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-      const res = await API.get("/api/products/featured");
+        const res = await API.get("/api/products/featured");
 
-      const list =
-        res?.data?.data ||
-        res?.data ||
-        [];
+        const list = res?.data?.data || res?.data || [];
 
-      if (isMounted) {
-        setFeatured(Array.isArray(list) ? list : []);
+        if (isMounted) {
+          setFeatured(Array.isArray(list) ? list : []);
+        }
+      } catch (err) {
+        console.error("Featured fetch failed:", err);
+
+        if (isMounted) {
+          setError("Failed to load featured products");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    } catch (err) {
-      console.error("Featured fetch failed:", err);
+    };
 
-      if (isMounted) {
-        setError("Failed to load featured products");
-      }
-    } finally {
-      if (isMounted) {
-        setLoading(false);
-      }
-    }
-  };
+    loadFeatured();
 
-  loadFeatured();
-
-  return () => {
-    isMounted = false;
-  };
-}, []);
-
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <main className="bg-white text-gray-800">
@@ -452,10 +448,8 @@ useEffect(() => {
         <LatestBlogs />
       </section>
 
-      <section className="py-20 px-5 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-        <div className="max-w-6xl mx-auto text-center">
-          <InstagramFollow />
-        </div>
+      <section className="bg-white">
+        <InstagramFollow />
       </section>
     </main>
   );
