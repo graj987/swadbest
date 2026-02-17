@@ -145,7 +145,7 @@ const Footer = () => {
               </h4>
               <div className="flex flex-wrap gap-5 md:justify-end">
                 {[
-                  { name: "Delhivery", file: "delhivery.png" },
+                  { name: "Delhivery", file: "delhivery.jpeg" },
                   { name: "Blue Dart", file: "bluedart.png" },
                   { name: "Shiprocket", file: "shiprocket.png" },
                 ].map((item, i) => (
