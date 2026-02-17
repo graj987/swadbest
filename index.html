@@ -24,15 +24,19 @@
     <meta name="author" content="SwadBest" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/logo.jpeg" />
-    <link rel="apple-touch-icon" href="/logo.jpeg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo32.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/logo512.png" />
+    <link rel="icon" type="image/png" sizes="1024x1024" href="/logo1024.png" />
 
     <!-- Theme Color (Mobile Browser Color) -->
     <meta name="theme-color" content="#ea580c" />
 
     <!-- Open Graph (For WhatsApp, Facebook, LinkedIn Preview) -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="SwadBest | Authentic Homemade Traditional Foods" />
+    <meta
+      property="og:title"
+      content="SwadBest | Authentic Homemade Traditional Foods"
+    />
     <meta
       property="og:description"
       content="Experience the real homemade traditional taste delivered fresh to your doorstep."
@@ -43,7 +47,10 @@
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="SwadBest | Authentic Homemade Traditional Foods" />
+    <meta
+      name="twitter:title"
+      content="SwadBest | Authentic Homemade Traditional Foods"
+    />
     <meta
       name="twitter:description"
       content="Authentic homemade traditional foods crafted with love."
@@ -57,10 +64,20 @@
         "@type": "Organization",
         "name": "SwadBest",
         "url": "https://swadbest.com",
-        "logo": "https://swadbest.com/logo.jpeg",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://swadbest.com/logo1024.png",
+          "width": 1024,
+          "height": 1024
+        },
+        "brand": {
+          "@type": "Brand",
+          "name": "SwadBest"
+        },
+        "description": "SwadBest delivers authentic homemade traditional Indian foods crafted with love and fresh ingredients.",
         "sameAs": [
-          "https://www.instagram.com/",
-          "https://www.facebook.com/"
+          "https://www.instagram.com/YOUR_REAL_HANDLE",
+          "https://www.facebook.com/YOUR_REAL_PAGE"
         ]
       }
     </script>
