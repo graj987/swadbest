@@ -40,6 +40,7 @@ import Terms from "./Pages/Terms";
 import RefundPolicy from "./Pages/Refund";
 import TrackOrder from "./Components/TrackOrder";
 import BlogDetails from "./Pages/BlogDetail";
+import PaymentSuccess from "./Pages/PaymentSuccess";
 
 /* ---------------- Routes ---------------- */
 
@@ -71,6 +72,8 @@ function AppRoutes() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/refund" element={<RefundPolicy />} />
         <Route path="/track/:awb" element={<TrackOrder />} />
+        <Route path="/payment-success/:orderId" element={<PaymentSuccess />} />
+
 
         {/* Email / OTP (public) */}
         <Route path="/verify-email" element={<VerifyEmail />} />

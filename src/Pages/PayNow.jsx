@@ -96,7 +96,7 @@ const PayNow = () => {
               { headers: getAuthHeader() }
             );
 
-            if (verify.data?.success) {
+            if (verify.data?.ok) {
               navigate("/orders");
             } else {
               setError("Payment verification failed.");
