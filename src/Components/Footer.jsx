@@ -176,22 +176,37 @@ const Footer = () => {
         href="https://wa.me/918709397655"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50 group"
+        className="fixed bottom-6 right-6 z-50 group"
       >
-        <div className="relative">
-          {/* Pulse Ring */}
-          <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-70 animate-ping"></span>
+        <div className="relative flex items-center justify-center">
+          {/* Soft Glow Background */}
+          <span className="absolute w-16 h-16 rounded-full bg-green-400 blur-2xl opacity-40 group-hover:opacity-70 transition duration-500"></span>
 
-          <div className="relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#25D366] shadow-xl hover:scale-110 transition duration-300">
+          {/* Main Button */}
+          <div
+            className="relative flex items-center justify-center 
+        w-14 h-14 rounded-full 
+        bg-gradient-to-br from-[#25D366] to-[#128C7E] 
+        shadow-[0_8px_25px_rgba(37,211,102,0.5)]
+        hover:scale-110 hover:shadow-[0_10px_35px_rgba(37,211,102,0.7)]
+        transition-all duration-300 animate-bounce-slow overflow-hidden"
+          >
             <img
-              src="/img/whatsapp.png"
+              src="/img/whatsapplogo.jpeg"
               alt="WhatsApp"
-              className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
+              className="w-14 h-14 object-contain drop-shadow-lg"
             />
           </div>
 
-          {/* Tooltip */}
-          <div className="hidden sm:block absolute right-16 top-1/2 -translate-y-1/2 bg-black text-white text-xs px-3 py-1 rounded-md opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+          {/* Glass Tooltip */}
+          <div
+            className="hidden sm:block absolute right-20 top-1/2 -translate-y-1/2
+        backdrop-blur-md bg-white/20 text-white
+        border border-white/30
+        text-sm px-4 py-1.5 rounded-lg
+        opacity-0 group-hover:opacity-100
+        transition duration-300 whitespace-nowrap shadow-lg"
+          >
             Chat with us
           </div>
         </div>

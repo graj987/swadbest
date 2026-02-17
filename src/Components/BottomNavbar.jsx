@@ -30,10 +30,10 @@ export default function BottomNav({ cartCount = 0 }) {
         />
 
         <NavItem
-          to="/search"
-          label="Search"
-          icon="🔍"
-          active={isActive(["/search", "/products"])}
+          to="/orders"
+          label="Basket"
+          icon="📦"
+          active={pathname === "/orders"}
         />
 
         <NavItem

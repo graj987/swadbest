@@ -42,6 +42,13 @@ export default function Account() {
           <span>Shipping Address</span>
           <span className="text-gray-400">›</span>
         </Link>
+        <Link
+          to="/orders"
+          className="flex items-center justify-between px-4 py-4 hover:bg-gray-50"
+        >
+          <span>My Basket</span>
+          <span className="text-gray-400">›</span>
+        </Link>
 
         <Link
           to="/privacy"

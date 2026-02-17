@@ -10,21 +10,8 @@ export default {
 
     extend: {
       /* ===========================
-             SWADBEST BRAND COLORS
-            ============================== */
-      extend: {
-        animation: {
-          gradientMove: "gradientMove 6s ease infinite",
-        },
-        keyframes: {
-          gradientMove: {
-            "0%": { backgroundPosition: "0% 50%" },
-            "50%": { backgroundPosition: "100% 50%" },
-            "100%": { backgroundPosition: "0% 50%" },
-          },
-        },
-      },
-
+         BRAND COLORS
+      ============================== */
       colors: {
         brand: {
           light: "#FFEDD5",
@@ -39,8 +26,8 @@ export default {
       },
 
       /* ===========================
-             CUSTOM SHADOWS (Premium)
-            ============================== */
+         CUSTOM SHADOWS
+      ============================== */
       boxShadow: {
         card: "0 6px 20px rgba(0,0,0,0.08)",
         cardHover: "0 12px 30px rgba(0,0,0,0.12)",
@@ -49,18 +36,24 @@ export default {
       },
 
       /* ===========================
-             GRADIENTS
-            ============================== */
+         GRADIENTS
+      ============================== */
       backgroundImage: {
         "swad-gradient":
           "linear-gradient(135deg, #fb923c 0%, #ea580c 45%, #c2410c 100%)",
-        "swad-light": "linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%)",
+        "swad-light":
+          "linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%)",
       },
 
       /* ===========================
-             ANIMATIONS & KEYFRAMES
-            ============================== */
+         KEYFRAMES
+      ============================== */
       keyframes: {
+        gradientMove: {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" },
+        },
         fadeIn: {
           "0%": { opacity: 0, transform: "translateY(10px)" },
           "100%": { opacity: 1, transform: "translateY(0)" },
@@ -88,7 +81,12 @@ export default {
           "100%": { opacity: 1, transform: "translateY(0)" },
         },
       },
+
+      /* ===========================
+         ANIMATIONS
+      ============================== */
       animation: {
+        gradientMove: "gradientMove 6s ease infinite",
         fadeIn: "fadeIn 0.6s ease-out",
         fadeInSlow: "fadeIn 1.2s ease-out",
         slideUp: "slideUp 0.7s ease-out",
@@ -96,11 +94,12 @@ export default {
         floatSlow: "floatSlow 6s ease-in-out infinite",
         scaleSmooth: "scaleSmooth 0.6s ease-out",
         slideDown: "slideDown 0.3s ease-out",
+        "bounce-slow": "bounce 3s infinite",
       },
 
       /* ===========================
-             TYPOGRAPHY SCALE (Mobile First)
-            ============================== */
+         TYPOGRAPHY
+      ============================== */
       fontSize: {
         base: "0.95rem",
         sm: "0.85rem",
@@ -113,8 +112,8 @@ export default {
       },
 
       /* ===========================
-             RADIUS (Premium Look)
-            ============================== */
+         BORDER RADIUS
+      ============================== */
       borderRadius: {
         soft: "14px",
         card: "20px",
@@ -122,5 +121,6 @@ export default {
       },
     },
   },
+
   plugins: [],
 };
