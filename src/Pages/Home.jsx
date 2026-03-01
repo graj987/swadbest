@@ -30,6 +30,9 @@ const Home = () => {
   const [featured, setFeatured] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedVariant, setSelectedVariant] = useState(
+  hero.variants?.[0]
+);
 
   const mountRef = useRef(null);
   const mouse = useRef({ x: 0 });
@@ -266,98 +269,101 @@ const Home = () => {
           </div>
 
           {/* CONTENT */}
-          <div className="relative z-10 h-full flex items-center justify-center text-white">
-            {/* 🔹 MOBILE TEXT (NEW, DESKTOP UNCHANGED) */}
-            <div className="absolute top-16 left-1/2 -translate-x-1/2 text-center max-w-sm px-4 md:hidden">
-              <p className="text-xs uppercase tracking-widest text-white/70 mb-2">
-                Traditional • Homemade
-              </p>
+          {/* CONTENT */}
+<div className="relative z-10 h-full flex items-center justify-center text-white px-6">
 
-              <h1 className="text-3xl font-extrabold leading-tight">
-                Achwani <br />
-                <span className="text-white/90">Homemade Spice</span>
-              </h1>
+  {/* LEFT TEXT (Desktop Only) */}
+  <div className="hidden md:block absolute left-16 top-1/2 -translate-y-1/2 max-w-sm">
+    <p className="text-xs uppercase tracking-widest text-white/60 mb-3">
+      Traditional • Homemade
+    </p>
 
-              <p className="text-white/80 mt-3 text-sm">
-                Crafted in small batches using traditional recipes.
-              </p>
+    <h1 className="text-5xl font-extrabold leading-tight">
+      Achwani <br />
+      <span className="text-white/90">Homemade Spice</span>
+    </h1>
 
-              <p className="mt-2 text-xs text-white/60">
-                Net weight · {hero.weight}
-              </p>
-            </div>
+    <p className="text-white/80 mt-4 text-sm leading-relaxed">
+      Crafted in small batches using premium ingredients for authentic flavor.
+    </p>
 
-            {/* 🔹 DESKTOP TEXT (UNCHANGED) */}
-            <div className="absolute left-6 md:left-16 top-1/2 -translate-y-1/2 max-w-sm hidden md:block">
-              <p className="text-xs uppercase tracking-widest text-white/60 mb-3">
-                Traditional • Homemade
-              </p>
+    <div className="mt-4 flex gap-4 text-xs text-white/60">
+      <span>✔ No Preservatives</span>
+      <span>✔ Handcrafted</span>
+      <span>✔ Premium Quality</span>
+    </div>
+  </div>
 
-              <h1 className="text-5xl font-extrabold leading-tight">
-                Achwani <br />
-                <span className="text-white/90">Homemade Spice</span>
-              </h1>
+  {/* BIGGER 3D MODEL */}
+  <div
+    ref={mountRef}
+    className="
+      relative z-10
+      w-[320px] h-[320px]
+      sm:w-[380px] sm:h-[380px]
+      md:w-[520px] md:h-[520px]
+      lg:w-[620px] lg:h-[620px]
+    "
+  />
 
-              <p className="text-white/80 mt-4 text-sm leading-relaxed">
-                Crafted in small batches using traditional recipes and premium
-                ingredients for authentic taste.
-              </p>
+  {/* RIGHT SIDE PRODUCT PANEL (Desktop) */}
+  <div className="hidden md:block absolute right-16 top-1/2 -translate-y-1/2 w-[280px] bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-2xl">
 
-              <p className="mt-3 text-xs text-white/60">
-                Net weight · {hero.weight}
-              </p>
-            </div>
+    {/* Variant Selector */}
+    <h3 className="text-sm font-semibold mb-3 text-white/80">
+      Select Variant
+    </h3>
 
-            {/* 3D PRODUCT (RESPONSIVE SIZE) */}
-            <div
-              ref={mountRef}
-              className="
-              mt-70 md:mt-0
-          relative z-10
-          w-[260px] h-[260px]
-          sm:w-[300px] sm:h-[300px]
-          md:w-[420px] md:h-[420px]
-          lg:w-[520px] lg:h-[520px]
-        "
-            />
-
-            {/* CTA */}
-            <div
-              className="
-          fixed md:absolute
-          bottom-16 md:bottom-6
-          left-1/2 md:left-auto
-          right-auto md:right-16
-          -translate-x-1/2 md:translate-x-0
-          flex items-center gap-4
-          bg-white/90 md:bg-transparent
-          backdrop-blur md:backdrop-blur-0
-          px-4 py-3 md:p-0
-          rounded-full md:rounded-none
-          shadow-lg md:shadow-none
-          z-[9999]
-        "
-            >
-              <span className="text-lg md:text-2xl font-bold text-gray-900 md:text-white">
-                ₹{hero.price}
-              </span>
-
-              <button
-                disabled={hero.stock === 0}
-                onClick={handleBuy}
-                className={`
-            px-6 py-3 rounded-full font-semibold transition-all
+    <div className="flex flex-col gap-2 mb-4">
+      {hero.variants?.map((variant, i) => (
+        <button
+          key={i}
+          onClick={() => setSelectedVariant(variant)}
+          className={`px-4 py-2 rounded-lg text-sm transition-all
             ${
-              hero.stock === 0
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-orange-600 text-white active:scale-95 md:bg-white md:text-orange-700 md:hover:scale-105"
+              selectedVariant?.weight === variant.weight
+                ? "bg-white text-orange-700 font-semibold"
+                : "bg-white/20 hover:bg-white/30"
             }
           `}
-              >
-                {hero.stock === 0 ? "Out of Stock" : "Buy Now"}
-              </button>
-            </div>
-          </div>
+        >
+          {variant.weight}
+        </button>
+      ))}
+    </div>
+
+    {/* Price */}
+    <div className="mb-2 text-2xl font-bold">
+      ₹{selectedVariant?.price}
+    </div>
+
+    {/* Stock */}
+    <div className="text-xs mb-4">
+      {selectedVariant?.stock > 0 ? (
+        <span className="text-green-400">In Stock</span>
+      ) : (
+        <span className="text-red-400">Out of Stock</span>
+      )}
+    </div>
+
+    {/* CTA */}
+    <button
+      disabled={selectedVariant?.stock === 0}
+      onClick={() => handleBuy(selectedVariant)}
+      className={`w-full py-3 rounded-full font-semibold transition-all
+        ${
+          selectedVariant?.stock === 0
+            ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+            : "bg-orange-600 hover:scale-105 active:scale-95"
+        }
+      `}
+    >
+      {selectedVariant?.stock === 0 ? "Out of Stock" : "Buy Now"}
+    </button>
+  </div>
+
+</div>
+
         </section>
       )}
 

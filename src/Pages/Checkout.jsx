@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { user, getAuthHeader } = useAuth();
+  const { user } = useAuth();
 
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -40,9 +40,7 @@ const Checkout = () => {
   useEffect(() => {
     const loadCart = async () => {
       try {
-        const res = await API.get("/api/cart", {
-          headers: getAuthHeader(),
-        });
+        const res = await API.get("/api/cart");
 
         const items = res.data?.items || [];
 
@@ -64,7 +62,7 @@ const Checkout = () => {
     };
 
     loadCart();
-  }, [navigate, user, getAuthHeader]);
+  }, [navigate, user]);
 
   /* ---------------- Input Change ---------------- */
   const onChange = (e) =>
@@ -73,9 +71,7 @@ const Checkout = () => {
   /* ---------------- Fetch Addresses ---------------- */
   const fetchSaved = useCallback(async () => {
     try {
-      const res = await API.get("/api/address/getadd", {
-        headers: getAuthHeader(),
-      });
+      const res = await API.get("/api/address/getadd");
 
       if (res.data.success) {
         setSavedAddresses(res.data.data);
@@ -89,58 +85,74 @@ const Checkout = () => {
     } catch {
       toast.error("Failed to load saved addresses");
     }
-  }, [getAuthHeader]);
+  }, []);
 
   useEffect(() => {
     fetchSaved();
   }, [fetchSaved]);
 
+  const buildProductsPayload = useCallback(() => {
+    if (!cart.length) throw new Error("Cart empty");
+
+    return cart.map((item) => {
+      if (!item.product?._id) throw new Error("Invalid product");
+
+      const variantIndex =
+        item.variantIndex ??
+        item.product.variants?.findIndex(
+          (v) => v.weight === item.variant?.weight,
+        );
+
+      if (variantIndex < 0) throw new Error("Variant not found");
+
+      if (!item.quantity || item.quantity <= 0)
+        throw new Error("Invalid quantity");
+
+      return {
+        product: item.product._id,
+        variantIndex,
+        quantity: item.quantity,
+      };
+    });
+  }, [cart]);
+
   /* ---------------- Price Preview ---------------- */
   const updatePricePreview = useCallback(async () => {
-    if (!selectedAddress || !cart.length) return;
+    if (!selectedAddress || !form.paymentMethod || !cart.length) return;
 
     try {
-      const res = await API.post(
-        "/api/orders/price-preview",
-        {
-          products: cart.map((i) => ({
-            product: i.product?._id,
-            variantIndex:
-              i.variantIndex ??
-              i.product?.variants?.findIndex(
-                (v) => v.weight === i.variant?.weight,
-              ) ??
-              0,
-            quantity: i.quantity,
-          })),
+      // ✅ single source of truth
+      const products = buildProductsPayload();
 
-          addressId: selectedAddress,
-          paymentMethod: form.paymentMethod,
-        },
-        { headers: getAuthHeader() },
-      );
+      console.log("PRICE PREVIEW DATA:", products);
+
+      const res = await API.post("/api/orders/price-preview", {
+        products,
+        addressId: selectedAddress,
+        paymentMethod: form.paymentMethod,
+      });
 
       if (res.data?.success && res.data?.data) {
         setPricing(res.data.data);
       } else {
-        setPricing({
-          subtotal: 0,
-          tax: 0,
-          deliveryCharge: 0,
-          codCharge: 0,
-          totalAmount: 0,
-        });
+        throw new Error("Invalid pricing response");
       }
-    } catch {
-      toast.error("Pricing calculation failed");
+    } catch (err) {
+      console.error("PRICE PREVIEW ERROR:", err);
+      setPricing({
+        subtotal: 0,
+        tax: 0,
+        deliveryCharge: 0,
+        codCharge: 0,
+        totalAmount: 0,
+      });
+      console.error("SERVER:", err.response?.data);
     }
-  }, [getAuthHeader, selectedAddress, form.paymentMethod, cart]);
+  }, [cart, selectedAddress, form.paymentMethod, buildProductsPayload]);
 
   useEffect(() => {
-    if (selectedAddress && form.paymentMethod) {
-      updatePricePreview();
-    }
-  }, [selectedAddress, form.paymentMethod, updatePricePreview]);
+    updatePricePreview();
+  }, [updatePricePreview]);
 
   /* ---------------- Auto Detect Address ---------------- */
   const detectLocation = async () => {
@@ -197,9 +209,7 @@ const Checkout = () => {
 
     try {
       setLoading(true);
-      const res = await API.post("/api/address/add", form, {
-        headers: getAuthHeader(),
-      });
+      const res = await API.post("/api/address/add", form);
 
       if (!res.data.success) return toast.error(res.data.message);
       toast.success("Address saved");
@@ -211,85 +221,134 @@ const Checkout = () => {
     }
   };
 
-  /* ---------------- Place Order ---------------- */
+  /* ---------------- Build Products Payload ---------------- */
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    if (loading) return;
 
     if (!selectedAddress) return toast.error("Select delivery address");
+
     if (!form.paymentMethod) return toast.error("Select payment method");
 
     try {
       setLoading(true);
-      const res = await API.post(
-        "/api/orders/postorders",
-        {
-          products: cart.map((i) => ({
-            product: i.product?._id,
-            variantIndex:
-              i.variantIndex ??
-              i.product?.variants?.findIndex(
-                (v) => v.weight === i.variant?.weight,
-              ) ??
-              0,
-            quantity: i.quantity,
-          })),
 
-          addressId: selectedAddress,
-          paymentMethod: form.paymentMethod,
-        },
-        { headers: getAuthHeader() },
-      );
+      /* ---------- BUILD PRODUCTS PAYLOAD ---------- */
+      if (!cart.length) throw new Error("Cart empty");
 
-      const order = res.data?.data;
+      const products = buildProductsPayload();
 
+      console.log("ORDER DATA:", {
+        products,
+        addressId: selectedAddress,
+        paymentMethod: form.paymentMethod,
+      });
+
+      /* =======================================================
+       COD FLOW
+    ======================================================= */
       if (form.paymentMethod === "COD") {
+        const res = await API.post("/api/orders/postorders", {
+          products,
+          addressId: selectedAddress,
+          paymentMethod: "COD",
+        });
+
+        if (!res.data?.success)
+          throw new Error(res.data?.message || "Order failed");
+
         toast.success("Order placed successfully");
         localStorage.removeItem("cart");
-        return navigate("/orders");
+        navigate("/orders");
+        return;
       }
 
-      await startRazorpay(order._id);
-    } catch {
-      toast.error("Order placement failed");
+      /* =======================================================
+       ONLINE PAYMENT FLOW (FIXED)
+    ======================================================= */
+
+      // ✅ STEP 1: Create order in database FIRST
+      const orderRes = await API.post("/api/orders/postorders", {
+        products,
+        addressId: selectedAddress,
+        paymentMethod: "Online",
+      });
+
+      if (!orderRes.data?.success) throw new Error("Order creation failed");
+
+      const orderId =
+        orderRes.data?.order?._id ||
+        orderRes.data?.orderId ||
+        orderRes.data?._id ||
+        orderRes.data?.data?._id;
+
+      if (!orderId) {
+        throw new Error("Order ID not returned from server");
+      }
+
+      // ✅ STEP 2: Create Razorpay order USING orderId
+      const paymentRes = await API.post("/api/payments/create-order", {
+        orderId,
+      });
+
+      if (!paymentRes.data?.ok || !paymentRes.data?.razorpayOrder)
+        throw new Error("Failed to initiate payment");
+
+      const razorOrder = paymentRes.data.razorpayOrder;
+
+      const rzp = new window.Razorpay({
+        key: import.meta.env.VITE_RZ_KEY_ID,
+        amount: razorOrder.amount,
+        currency: "INR",
+        name: "Swadbest",
+        description: "Secure Payment",
+        order_id: razorOrder.id,
+
+        handler: async (response) => {
+          try {
+            if (!response?.razorpay_payment_id)
+              throw new Error("Invalid payment response");
+
+            const verify = await API.post("/api/payments/verify", {
+              orderId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verify.data?.ok) {
+              localStorage.removeItem("cart");
+              navigate(`/payment-success/${orderId}`);
+            } else {
+              throw new Error("Payment verification failed");
+            }
+          } catch (err) {
+            console.error("VERIFY ERROR:", err.response?.data);
+            navigate("/orders");
+          }
+        },
+
+        modal: {
+          ondismiss: () => toast.error("Payment cancelled"),
+        },
+      });
+
+      rzp.open();
+      rzp.on("payment.failed", function (response) {
+        console.error("Payment failed:", response.error);
+        toast.error("Payment failed. Try again.");
+      });
+    } catch (err) {
+      console.error("FULL ERROR:", err);
+      console.error("SERVER RESPONSE:", err.response?.data);
+
+      toast.error(
+        err.response?.data?.message || err.message || "Checkout failed",
+      );
     } finally {
       setLoading(false);
     }
-  };
-
-  /* ---------------- Razorpay ---------------- */
-  const startRazorpay = async (orderId) => {
-    const rzRes = await API.post(
-      "/api/payments/create-order",
-      { orderId },
-      { headers: getAuthHeader() },
-    );
-
-    const rp = rzRes.data.razorpayOrder;
-
-    new window.Razorpay({
-      key: import.meta.env.VITE_RZ_KEY_ID,
-      amount: rp.amount,
-      currency: "INR",
-      name: "Swadbest",
-      description: "Secure Payment",
-      order_id: rp.id,
-      handler: async (response) => {
-        await API.post(
-          "/api/payments/verify",
-          {
-            orderId,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_signature: response.razorpay_signature,
-          },
-          { headers: getAuthHeader() },
-        );
-
-        toast.success("Payment verified & order confirmed");
-        localStorage.removeItem("cart");
-        navigate("/orders");
-      },
-    }).open();
   };
 
   /* ---------------- UI ---------------- */
@@ -440,7 +499,7 @@ const Checkout = () => {
               disabled={loading}
               className="w-full mt-6 bg-orange-500 text-white py-3 rounded-lg font-semibold"
             >
-              {loading ? "Processing…" : "Place Order"}
+              {loading ? "Processing Payment..." : "Place Order"}
             </button>
           </div>
         </form>

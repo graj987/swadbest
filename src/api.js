@@ -1,35 +1,36 @@
-// src/api.js
 import axios from "axios";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
   headers: { "Content-Type": "application/json" },
+  timeout: 10000,
 });
 
-
-// Attach token only if exists
 API.interceptors.request.use((config) => {
-  // If Authorization already exists, do not override it
-  if (config.headers?.Authorization) {
-    return config;
-  }
+  const accessToken = localStorage.getItem("accessToken");
 
-  const token = localStorage.getItem("token");
-
-  const nonAuthRoutes = [
-    "/payments/verify",
-    "/payments/webhook",
-  ];
-
-  const isNonAuthRoute = nonAuthRoutes.some((route) =>
-    config.url?.includes(route)
-  );
-
-  if (!isNonAuthRoute && token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
 
   return config;
 });
+
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.warn("Unauthorized request:", error.config?.url);
+
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+
+      window.location.href = "/login";
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default API;
