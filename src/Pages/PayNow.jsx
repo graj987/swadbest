@@ -48,6 +48,19 @@ const PayNow = () => {
     loadOrder();
   }, [loadOrder]);
 
+  /* ---------- RAZORPAY READY CHECK ---------- */
+
+  const ensureRazorpayLoaded = () =>
+    new Promise((resolve) => {
+      if (window.Razorpay) return resolve(true);
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
   /* ---------- START PAYMENT ---------- */
 
   const startPayment = async () => {
@@ -58,60 +71,95 @@ const PayNow = () => {
       return;
     }
 
-    if (!window.Razorpay) {
-      setError("Payment service unavailable. Please refresh.");
-      return;
-    }
-
     try {
       setPaying(true);
       setError("");
+
+      const loaded = await ensureRazorpayLoaded();
+      if (!loaded) {
+        throw new Error("Razorpay SDK failed to load");
+      }
+
+      const key = import.meta.env.VITE_RZ_KEY_ID;
+
+      if (!key || !key.startsWith("rzp_live_")) {
+        console.warn("⚠ Razorpay LIVE key not detected");
+      }
+
+      /* ---- CREATE RAZORPAY ORDER ---- */
 
       const rzRes = await API.post("/api/payments/create-order", {
         orderId: order._id,
       });
 
-      if (!rzRes.data?.ok || !rzRes.data?.razorpayOrder?.id) {
-        throw new Error("Failed to create Razorpay order");
+      const razorOrder = rzRes.data?.razorpayOrder;
+
+      if (!rzRes.data?.ok || !razorOrder?.id) {
+        throw new Error("Invalid Razorpay order response");
       }
 
-      const razorOrder = rzRes.data.razorpayOrder;
+      /* ---------- CHECKOUT ---------- */
 
       const rzp = new window.Razorpay({
-        key: import.meta.env.VITE_RZ_KEY_ID,
+        key,
+        order_id: razorOrder.id,
         amount: razorOrder.amount,
         currency: "INR",
-        order_id: razorOrder.id,
+
         name: "Swadbest",
         description: `Order #${order._id}`,
+
+        prefill: {
+          name: order.address?.name || "",
+          contact: order.address?.phone || "",
+          email: order.user?.email || "",
+        },
+
         handler: async (response) => {
           try {
-            const verify = await API.post("/api/payments/verify", response);
+            const verify = await API.post(
+              "/api/payments/verify",
+              response
+            );
 
             if (verify.data?.ok) {
               navigate(`/payment-success/${order._id}`);
             } else {
               navigate(`/order/${order._id}`);
             }
-          } catch {
+          } catch (e) {
+            console.error("Verification failed", e);
             navigate(`/order/${order._id}`);
           } finally {
             setPaying(false);
           }
         },
+
         modal: {
           ondismiss: () => {
             setError("Payment cancelled. You can retry.");
             setPaying(false);
           },
         },
+
         theme: { color: "#fb923c" },
+      });
+
+      /* ---------- FAILURE LISTENER (IMPORTANT) ---------- */
+
+      rzp.on("payment.failed", function (response) {
+        console.error("Payment Failed:", response.error);
+        setError(
+          response.error?.description ||
+            "Payment failed. Please try again."
+        );
+        setPaying(false);
       });
 
       rzp.open();
     } catch (err) {
-      console.error("Payment error:", err.message);
-      setError("Unable to start payment. Please try again.");
+      console.error("Payment error:", err);
+      setError(err.message || "Unable to start payment.");
       setPaying(false);
     }
   };
@@ -154,12 +202,8 @@ const PayNow = () => {
         </h2>
 
         <div className="text-sm text-gray-700 mb-4 space-y-1">
-          <div>
-            <b>Order ID:</b> {order._id}
-          </div>
-          <div>
-            <b>Deliver to:</b> {address?.name}, {address?.phone}
-          </div>
+          <div><b>Order ID:</b> {order._id}</div>
+          <div><b>Deliver to:</b> {address?.name}, {address?.phone}</div>
           <div>
             {address?.line1}, {address?.city}, {address?.state} –{" "}
             {address?.pincode}
@@ -173,7 +217,9 @@ const PayNow = () => {
                 {item.product?.name || "Product"} × {item.quantity}
               </span>
               <span>
-                {formatCurrency(item.priceAtPurchase * item.quantity)}
+                {formatCurrency(
+                  item.priceAtPurchase * item.quantity
+                )}
               </span>
             </div>
           ))}
@@ -193,6 +239,12 @@ const PayNow = () => {
             ? "Processing..."
             : `Pay Now • ${formatCurrency(order.totalAmount)}`}
         </button>
+
+        {error && (
+          <p className="text-red-500 text-sm mt-4 text-center">
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );
