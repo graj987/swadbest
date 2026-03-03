@@ -12,7 +12,10 @@ const LatestOffers = () => {
         setProducts(res.data.data || []);
       })
       .catch((err) => {
-        console.error("Failed to load latest products", err);
+        console.error(
+          "Latest products error:",
+          err.response?.data || err.message,
+        );
       });
   }, []);
 
