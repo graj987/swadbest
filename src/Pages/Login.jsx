@@ -96,6 +96,7 @@ export default function Login() {
                 name="email"
                 type="email"
                 placeholder="you@example.com"
+                autoComplete="email"
                 value={form.email}
                 onChange={onChange}
                 className="focus-visible:ring-[oklch(0.705_0.213_47.604)]"
@@ -111,6 +112,7 @@ export default function Login() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   value={form.password}
                   onChange={onChange}
                   className="focus-visible:ring-[oklch(0.705_0.213_47.604)]"

@@ -115,6 +115,7 @@ const Register = () => {
               id="email"
               name="email"
               type="email"
+              autoComplete="email"
               value={formData.email}
               onChange={handleChange}
               required
@@ -132,6 +133,7 @@ const Register = () => {
                 name="password"
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
+                autoComplete="current-password"
                 onChange={handleChange}
                 required
                 className="focus-visible:ring-[oklch(0.705_0.213_47.604)]"

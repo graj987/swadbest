@@ -31,7 +31,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedVariant, setSelectedVariant] = useState(
-  hero.variants?.[0]
+  hero?.variants?.[0]
 );
 
   const mountRef = useRef(null);
