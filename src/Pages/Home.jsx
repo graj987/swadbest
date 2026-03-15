@@ -4,9 +4,7 @@ import { Link } from "react-router-dom";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import API from "@/api";
-import Loader from "@/Components/Loader";
 import ProductCard from "@/Components/ProductCard";
-import "../Style/home.css";
 import { useNavigate } from "react-router-dom";
 import DealsOfTheDay from "@/Components/DealsOfTheDay";
 import FlashSale from "@/Components/FlashSell";
@@ -19,87 +17,85 @@ import LatestBlogs from "@/Components/LatestBlogs";
 import InstagramFollow from "@/Components/InstagramFollow";
 import ProductCardSkeleton from "@/Components/ProductSkeleton";
 
+/* ─────────────────────────── TRUST BADGE ─────────────────────────── */
+function TrustBadge({ label }) {
+  return (
+    <div className="flex items-center gap-2 text-sm font-medium text-stone-600">
+      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-100 text-amber-700">
+        <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3" stroke="currentColor" strokeWidth="2">
+          <polyline points="2,6 5,9 10,3" />
+        </svg>
+      </span>
+      {label}
+    </div>
+  );
+}
+
+/* ─────────────────────────── MAIN COMPONENT ─────────────────────────── */
 const Home = () => {
-  const [hero, setHero] = useState({
-    id: null,
-    weight: "",
-    price: 0,
-    stock: 0,
-  });
+  const [hero, setHero] = useState({ id: null, weight: "", price: 0, stock: 0 });
   const navigate = useNavigate();
   const [featured, setFeatured] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedVariant, setSelectedVariant] = useState(
-  hero?.variants?.[0]
-);
+  const [selectedVariant, setSelectedVariant] = useState(hero?.variants?.[0]);
+  const [heroVisible, setHeroVisible] = useState(false);
 
   const mountRef = useRef(null);
   const mouse = useRef({ x: 0 });
+
+  /* ── Fetch hero ── */
   useEffect(() => {
     const fetchHero = async () => {
       try {
         const res = await API.get("/api/products/hero");
         setHero(res.data);
-      } catch (err) {
-        (err, setHero(null));
+        setSelectedVariant(res.data?.variants?.[0]);
+      } catch {
+        setHero(null);
       }
     };
-
     fetchHero();
   }, []);
 
+  /* ── Entrance animation trigger ── */
+  useEffect(() => {
+    const t = setTimeout(() => setHeroVisible(true), 80);
+    return () => clearTimeout(t);
+  }, []);
+
+  /* ── Three.js scene ── */
   useEffect(() => {
     const mount = mountRef.current;
+    if (!mount) return;
 
-    /* ================= SCENE ================= */
     const scene = new THREE.Scene();
-
-    /* ================= CAMERA ================= */
-    const camera = new THREE.PerspectiveCamera(
-      40,
-      mount.clientWidth / mount.clientHeight,
-      0.1,
-      100,
-    );
+    const camera = new THREE.PerspectiveCamera(40, mount.clientWidth / mount.clientHeight, 0.1, 100);
     camera.position.set(0, 0.15, 4.5);
     camera.lookAt(0, 0, 0);
 
-    /* ================= RENDERER ================= */
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      powerPreference: "high-performance",
-    });
-
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.25;
-
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
     mount.appendChild(renderer.domElement);
 
-    /* ================= LIGHTING ================= */
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
     keyLight.position.set(6, 7, 5);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.set(2048, 2048);
-    keyLight.shadow.camera.near = 0.1;
-    keyLight.shadow.camera.far = 20;
     scene.add(keyLight);
 
     const rimLight = new THREE.DirectionalLight(0xffffff, 0.9);
     rimLight.position.set(-5, 3, -4);
     scene.add(rimLight);
 
-    /* ================= SHADOW PLANE ================= */
     const shadowPlane = new THREE.Mesh(
       new THREE.PlaneGeometry(3.6, 3.6),
       new THREE.ShadowMaterial({ opacity: 0.35 }),
@@ -108,27 +104,21 @@ const Home = () => {
     shadowPlane.receiveShadow = true;
     scene.add(shadowPlane);
 
-    /* ================= MODEL ================= */
     const loader = new GLTFLoader();
     let jar = null;
     let baseY = 0;
 
     loader.load("/models/newjar.glb", (gltf) => {
       jar = gltf.scene;
-
       const box = new THREE.Box3().setFromObject(jar);
-      const center = box.getCenter(new THREE.Vector3());
-      jar.position.sub(center);
-
+      jar.position.sub(box.getCenter(new THREE.Vector3()));
       jar.scale.set(1.25, 1.25, 1.25);
-
       baseY = -0.65;
       jar.position.y = baseY;
       shadowPlane.position.y = baseY - 0.65;
       scene.add(jar);
     });
 
-    /* ================= INTERACTION ================= */
     const onMouseMove = (e) => {
       const rect = mount.getBoundingClientRect();
       mouse.current.x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
@@ -142,287 +132,322 @@ const Home = () => {
     };
     window.addEventListener("resize", onResize);
 
-    /* ================= ANIMATION ================= */
     const clock = new THREE.Clock();
     let frameId;
-
     const animate = () => {
       frameId = requestAnimationFrame(animate);
       const t = clock.getElapsedTime();
-
       if (jar) {
         jar.rotation.y += (mouse.current.x * 1.1 - jar.rotation.y) * 0.06;
         jar.rotation.z += (mouse.current.x * 0.12 - jar.rotation.z) * 0.05;
-
         jar.position.y = baseY + Math.sin(t * 1.2) * 0.05;
       }
-
       renderer.render(scene, camera);
     };
     animate();
 
-    /* ================= CLEANUP ================= */
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("resize", onResize);
-      mount.removeChild(renderer.domElement);
+      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
       renderer.dispose();
     };
   }, []);
 
-  useEffect(() => {
-    const fetchMeta = async () => {
-      try {
-        const res = await API.get("/api/products/hero");
-
-        // res.data is already the object you showed from Postman
-        const hero = res.data;
-
-        setHero({
-          id: hero.id,
-          weight: hero.weight,
-          price: hero.price,
-          stock: hero.stock,
-        });
-      } catch (err) {
-        console.error("Failed to load product meta", err);
-      }
-    };
-
-    fetchMeta();
-  }, []);
-
-  const handleBuy = () => {
-    if (!hero.id) return;
-
-    navigate(`/products/${hero.id}`, {
-      state: {
-        heroMeta: {
-          price: hero.price,
-          weight: hero.weight,
-        },
-      },
-    });
-  };
+  /* ── Fetch featured ── */
   useEffect(() => {
     let isMounted = true;
-
     const loadFeatured = async () => {
       try {
         setLoading(true);
         setError("");
-
         const res = await API.get("/api/products/featured");
-
         const list = res?.data?.data || res?.data || [];
-
-        if (isMounted) {
-          setFeatured(Array.isArray(list) ? list : []);
-        }
-      } catch (err) {
-        console.error("Featured fetch failed:", err);
-
-        if (isMounted) {
-          setError("Failed to load featured products");
-        }
+        if (isMounted) setFeatured(Array.isArray(list) ? list : []);
+      } catch {
+        if (isMounted) setError("Failed to load featured products");
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
-
     loadFeatured();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
+  const handleBuy = (variant) => {
+    const v = variant || selectedVariant;
+    if (!hero?.id) return;
+    navigate(`/products/${hero.id}`, {
+      state: { heroMeta: { price: v?.price ?? hero.price, weight: v?.weight ?? hero.weight } },
+    });
+  };
+
+  /* ─────────── RENDER ─────────── */
   return (
-    <main className="bg-white text-gray-800">
+    <main className="bg-stone-50 text-stone-800 font-[system-ui]">
+
+      {/* ══════════════════════ HERO ══════════════════════ */}
       {hero && (
-        <section className="relative min-h-[100svh] overflow-hidden">
-          {/* BACKGROUND */}
+        <section className="relative min-h-svh overflow-hidden">
+
+          {/* Background */}
           <div
             className="absolute inset-0"
             style={{
               background: `
-          radial-gradient(
-            circle at 50% 40%,
-            oklch(0.65 0.12 65) 0%,
-            oklch(0.54 0.10 48) 35%,
-            oklch(0.30 0.12 28) 70%,
-            oklch(0.20 0.10 25) 100%
-          )
-        `,
+                radial-gradient(ellipse 80% 70% at 50% 30%,
+                  #c2410c 0%,
+                  #9a3412 35%,
+                  #431407 70%,
+                  #1c0a03 100%
+                )
+              `,
             }}
           />
 
-          {/* TEXTURE */}
-          <div className="absolute inset-0 opacity-[0.04] bg-[url('/img/pattern-leaf.svg')] bg-repeat bg-[length:320px] pointer-events-none" />
+          {/* Subtle noise texture */}
+          <div
+            className="absolute inset-0 opacity-[0.06] pointer-events-none"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+              backgroundSize: "200px 200px",
+            }}
+          />
 
-          {/* GLOW */}
+          {/* Radial glow */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-[480px] h-[480px] rounded-full bg-white/12 blur-[120px]" />
+            <div className="w-[560px] h-[560px] rounded-full opacity-20 blur-[100px]"
+              style={{ background: "radial-gradient(circle, #fb923c 0%, transparent 70%)" }}
+            />
           </div>
 
-          {/* CONTENT */}
-          {/* CONTENT */}
-<div className="relative z-10 h-full flex items-center justify-center text-white px-6">
+          {/* Fine horizontal rule at bottom of hero */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-  {/* LEFT TEXT (Desktop Only) */}
-  <div className="hidden md:block absolute left-16 top-1/2 -translate-y-1/2 max-w-sm">
-    <p className="text-xs uppercase tracking-widest text-white/60 mb-3">
-      Traditional • Homemade
-    </p>
+          {/* ── Content grid ── */}
+          <div className="relative z-10 h-full min-h-svh grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-0 px-6 md:px-16">
 
-    <h1 className="text-5xl font-extrabold leading-tight">
-      Achwani <br />
-      <span className="text-white/90">Homemade Spice</span>
-    </h1>
+            {/* LEFT — Brand copy */}
+            <div
+              className={`hidden md:flex flex-col gap-5 transition-all duration-700 ease-out ${heroVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}
+              style={{ transitionDelay: "100ms" }}
+            >
+              {/* Eyebrow */}
+              <p className="text-xs uppercase tracking-[0.25em] text-amber-400/80 font-medium">
+                Traditional · Homemade · Premium
+              </p>
 
-    <p className="text-white/80 mt-4 text-sm leading-relaxed">
-      Crafted in small batches using premium ingredients for authentic flavor.
-    </p>
+              {/* Headline */}
+              <h1 className="text-[clamp(2.4rem,4vw,3.5rem)] font-black leading-[1.05] text-white">
+                Achwani<br />
+                <span className="text-amber-300">Homemade</span><br />
+                Spice
+              </h1>
 
-    <div className="mt-4 flex gap-4 text-xs text-white/60">
-      <span>✔ No Preservatives</span>
-      <span>✔ Handcrafted</span>
-      <span>✔ Premium Quality</span>
-    </div>
-  </div>
+              {/* Divider */}
+              <div className="w-12 h-0.5 bg-amber-500/60 rounded-full" />
 
-  {/* BIGGER 3D MODEL */}
-  <div
-    ref={mountRef}
-    className="
-      relative z-10
-      w-[320px] h-[320px]
-      sm:w-[380px] sm:h-[380px]
-      md:w-[520px] md:h-[520px]
-      lg:w-[620px] lg:h-[620px]
-    "
-  />
+              {/* Body */}
+              <p className="text-white/60 text-sm leading-relaxed max-w-xs">
+                Crafted in small batches using premium whole ingredients. 
+                No fillers, no shortcuts — just authentic, generational flavour.
+              </p>
 
-  {/* RIGHT SIDE PRODUCT PANEL (Desktop) */}
-  <div className="hidden md:block absolute right-16 top-1/2 -translate-y-1/2 w-[280px] bg-white/10 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-2xl">
+              {/* Trust pills */}
+              <div className="flex flex-wrap gap-2 mt-1">
+                {["No Preservatives", "Handcrafted", "FSSAI Certified"].map((t) => (
+                  <span
+                    key={t}
+                    className="inline-block px-3 py-1 rounded-full text-[11px] font-medium bg-white/10 text-white/70 border border-white/10 backdrop-blur-sm"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
 
-    {/* Variant Selector */}
-    <h3 className="text-sm font-semibold mb-3 text-white/80">
-      Select Variant
-    </h3>
+            {/* CENTER — 3D model */}
+            <div
+              ref={mountRef}
+              className={`
+                relative z-10 mx-auto
+                w-[300px] h-[300px]
+                sm:w-[380px] sm:h-[380px]
+                md:w-[500px] md:h-[500px]
+                lg:w-[600px] lg:h-[600px]
+                transition-all duration-1000 ease-out
+                ${heroVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"}
+              `}
+            />
 
-    <div className="flex flex-col gap-2 mb-4">
-      {hero.variants?.map((variant, i) => (
-        <button
-          key={i}
-          onClick={() => setSelectedVariant(variant)}
-          className={`px-4 py-2 rounded-lg text-sm transition-all
-            ${
-              selectedVariant?.weight === variant.weight
-                ? "bg-white text-orange-700 font-semibold"
-                : "bg-white/20 hover:bg-white/30"
-            }
-          `}
-        >
-          {variant.weight}
-        </button>
-      ))}
-    </div>
+            {/* RIGHT — Product panel */}
+            <div
+              className={`hidden md:flex flex-col gap-0 transition-all duration-700 ease-out ${heroVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}
+              style={{ transitionDelay: "200ms" }}
+            >
+              <div className="w-full max-w-[260px] ml-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
+                style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(20px)" }}
+              >
+                {/* Panel header */}
+                <div className="px-5 py-4 border-b border-white/10">
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-0.5">Select size</p>
+                  <div className="flex flex-col gap-2 mt-3">
+                    {hero.variants?.map((variant, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedVariant(variant)}
+                        className={`
+                          w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left
+                          ${selectedVariant?.weight === variant.weight
+                            ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
+                            : "bg-white/10 text-white/70 hover:bg-white/20"}
+                        `}
+                      >
+                        <span className="flex items-center justify-between">
+                          {variant.weight}
+                          <span className="font-bold text-base">₹{variant.price}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-    {/* Price */}
-    <div className="mb-2 text-2xl font-bold">
-      ₹{selectedVariant?.price}
-    </div>
+                {/* Panel footer */}
+                <div className="px-5 py-4">
+                  <div className="flex items-end justify-between mb-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-white/40">Price</p>
+                      <p className="text-2xl font-black text-white">₹{selectedVariant?.price ?? hero.price}</p>
+                    </div>
+                    <span
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        (selectedVariant?.stock ?? hero.stock) > 0
+                          ? "bg-emerald-500/20 text-emerald-300"
+                          : "bg-red-500/20 text-red-300"
+                      }`}
+                    >
+                      {(selectedVariant?.stock ?? hero.stock) > 0 ? "In Stock" : "Out of Stock"}
+                    </span>
+                  </div>
 
-    {/* Stock */}
-    <div className="text-xs mb-4">
-      {selectedVariant?.stock > 0 ? (
-        <span className="text-green-400">In Stock</span>
-      ) : (
-        <span className="text-red-400">Out of Stock</span>
-      )}
-    </div>
+                  <button
+                    disabled={(selectedVariant?.stock ?? hero.stock) === 0}
+                    onClick={() => handleBuy(selectedVariant)}
+                    className={`
+                      w-full py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-200
+                      ${(selectedVariant?.stock ?? hero.stock) === 0
+                        ? "bg-white/10 text-white/30 cursor-not-allowed"
+                        : "bg-amber-500 hover:bg-amber-400 text-white shadow-lg shadow-amber-500/30 hover:shadow-amber-400/40 active:scale-[0.98]"}
+                    `}
+                  >
+                    {(selectedVariant?.stock ?? hero.stock) === 0 ? "Out of Stock" : "Buy Now"}
+                  </button>
+                </div>
+              </div>
+            </div>
 
-    {/* CTA */}
-    <button
-      disabled={selectedVariant?.stock === 0}
-      onClick={() => handleBuy(selectedVariant)}
-      className={`w-full py-3 rounded-full font-semibold transition-all
-        ${
-          selectedVariant?.stock === 0
-            ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-            : "bg-orange-600 hover:scale-105 active:scale-95"
-        }
-      `}
-    >
-      {selectedVariant?.stock === 0 ? "Out of Stock" : "Buy Now"}
-    </button>
-  </div>
+            {/* MOBILE — bottom card */}
+            <div className="md:hidden w-full pb-10 -mt-4">
+              <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl"
+                style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(20px)" }}
+              >
+                <div className="p-4 flex gap-2 border-b border-white/10">
+                  {hero.variants?.map((variant, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedVariant(variant)}
+                      className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all
+                        ${selectedVariant?.weight === variant.weight
+                          ? "bg-amber-500 text-white"
+                          : "bg-white/10 text-white/60"}
+                      `}
+                    >
+                      {variant.weight}<br />
+                      <span className="font-bold">₹{variant.price}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="p-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest">Total</p>
+                    <p className="text-xl font-black text-white">₹{selectedVariant?.price ?? hero.price}</p>
+                  </div>
+                  <button
+                    disabled={(selectedVariant?.stock ?? hero.stock) === 0}
+                    onClick={() => handleBuy(selectedVariant)}
+                    className={`
+                      flex-1 py-3 rounded-xl text-sm font-bold transition-all
+                      ${(selectedVariant?.stock ?? hero.stock) === 0
+                        ? "bg-white/10 text-white/30 cursor-not-allowed"
+                        : "bg-amber-500 hover:bg-amber-400 text-white active:scale-95"}
+                    `}
+                  >
+                    Buy Now
+                  </button>
+                </div>
+              </div>
+            </div>
 
-</div>
-
+          </div>
         </section>
       )}
 
-      <section className="bg-gray-50 border-b">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center text-sm">
-          <TrustItem title="Hygienically Prepared" />
-          <TrustItem title="No Preservatives" />
-          <TrustItem title="FSSAI Certified" />
-          <TrustItem title="Made in India 🇮🇳" />
+      {/* ══════════════════════ TRUST STRIP ══════════════════════ */}
+      <section className="bg-white border-y border-stone-100">
+        <div className="max-w-5xl mx-auto px-6 py-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+          <TrustBadge label="Hygienically Prepared" />
+          <div className="hidden sm:block w-px h-4 bg-stone-200" />
+          <TrustBadge label="No Preservatives" />
+          <div className="hidden sm:block w-px h-4 bg-stone-200" />
+          <TrustBadge label="FSSAI Certified" />
+          <div className="hidden sm:block w-px h-4 bg-stone-200" />
+          <TrustBadge label="Made in India" />
         </div>
       </section>
 
-      <section className="py-16 px-5 bg-white">
+      {/* ══════════════════════ FEATURED PRODUCTS ══════════════════════ */}
+      <section className="py-20 px-5 bg-stone-50">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">
-                Featured Products
-              </h2>
-              <p className="text-gray-500 mt-1">
-                Our most loved and trusted picks
-              </p>
-            </div>
 
+          {/* Section header */}
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-amber-600 font-semibold mb-2">Our Selection</p>
+              <h2 className="text-3xl font-black tracking-tight text-stone-900">Featured Products</h2>
+              <p className="text-stone-400 mt-1.5 text-sm">Our most loved and trusted picks</p>
+            </div>
             <Link
               to="/products"
-              className="text-orange-600 font-semibold hover:text-orange-700 transition"
+              className="group flex items-center gap-1.5 text-sm font-semibold text-amber-700 hover:text-amber-600 transition-colors"
             >
-              View All →
+              View All
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
             </Link>
           </div>
 
+          {/* Grid */}
           {loading && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+              {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
             </div>
           )}
-
-          {error && <p className="text-red-500 text-center">{error}</p>}
-
-          {!loading && !error && featured.length === 0 && (
-            <p className="text-center text-gray-500">
-              No featured products available
-            </p>
+          {error && (
+            <p className="text-center text-red-500 py-8">{error}</p>
           )}
-
+          {!loading && !error && featured.length === 0 && (
+            <p className="text-center text-stone-400 py-8">No featured products available</p>
+          )}
           {!loading && !error && featured.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {featured.map((p) => (
-                <ProductCard key={p._id} product={p} />
-              ))}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+              {featured.map((p) => <ProductCard key={p._id} product={p} />)}
             </div>
           )}
         </div>
       </section>
 
-      <section className="bg-gradient-to-b from-orange-50 to-white py-16">
+      {/* ══════════════════════ CONTENT SECTIONS ══════════════════════ */}
+      <section className="bg-amber-50 border-t border-amber-100 py-16">
         <DealsOfTheDay />
       </section>
 
@@ -430,31 +455,31 @@ const Home = () => {
         <FlashSale />
       </section>
 
-      <section className="bg-gradient-to-b from-white to-orange-50 py-16">
+      <section className="bg-stone-50 border-y border-stone-100 py-16">
         <LatestOffers />
       </section>
 
-      <section className="bg-orange-50 py-16">
+      <section className="bg-white py-16">
         <AchwaniBenefits />
       </section>
 
-      <section className="bg-white py-16">
+      <section className="bg-stone-50 py-16">
         <AchwaniUsage />
       </section>
 
-      <section className="bg-orange-50 py-16">
+      <section className="bg-white py-16">
         <AyurvedaTestimonials />
       </section>
 
-      <section className="bg-white py-16">
+      <section className="bg-stone-50 border-y border-stone-100 py-16">
         <DigestiveComparison />
       </section>
 
-      <section className="bg-gray-50 py-16">
+      <section className="bg-white py-16">
         <LatestBlogs />
       </section>
 
-      <section className="bg-white">
+      <section className="bg-stone-50 border-t border-stone-100">
         <InstagramFollow />
       </section>
     </main>
@@ -462,9 +487,3 @@ const Home = () => {
 };
 
 export default Home;
-
-/* -------- SMALL COMPONENT -------- */
-
-function TrustItem({ title }) {
-  return <div className="font-medium text-gray-700">✓ {title}</div>;
-}

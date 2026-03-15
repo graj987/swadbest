@@ -17,6 +17,7 @@ import Cart from "./Pages/Cart";
 import Checkout from "./Pages/Checkout/Checkout";
 import Orders from "./Pages/Orders";
 import OrderDetails from "./Pages/OrderDetails";
+import OrderConfirmation from "./Pages/OrderConfirmation";
 import Profile from "./Pages/Profile";
 import Contact from "./Pages/Contact";
 import Login from "./Pages/Login";
@@ -33,21 +34,26 @@ import ResetPassword from "./Pages/ResetPassword";
 import VerifyEmail from "./Pages/VerifyEmail";
 import Verify from "./Pages/Verify";
 import VerifyOTP from "./Pages/VerifyOTP";
+
+// Other pages
 import Wishlist from "./Pages/Wishlist";
 import AboutUs from "./Pages/About";
 import PrivacyPolicy from "./Pages/PrivacyPolicy";
 import Terms from "./Pages/Terms";
 import RefundPolicy from "./Pages/Refund";
-import TrackOrder from "./Components/TrackOrder";
 import BlogDetails from "./Pages/BlogDetail";
 import PaymentSuccess from "./Pages/PaymentSuccess";
 
-/* ---------------- Routes ---------------- */
+// ✅ TrackPage is the standalone tracking PAGE (uses TrackOrder component internally)
+// ❌ Do NOT import TrackOrder (the component) here — it's used inside TrackPage, not as a route
+import TrackPage from "./Pages/TrackPage";
 
+/* ─────────────────────────────────────────────
+   ROUTES
+───────────────────────────────────────────── */
 function AppRoutes() {
   const { loading } = useAuth();
 
-  // ⏳ block app until auth state is restored
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-orange-50">
@@ -59,113 +65,63 @@ function AppRoutes() {
   return (
     <Layout>
       <Routes>
-        {/* Public */}
-        <Route path="/" element={<Home />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/products/:id" element={<ProductDetail />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/address" element={<Address />} />
-        <Route path="/about" element={<AboutUs />} />
-        <Route path="/privacy" element={<PrivacyPolicy />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/refund" element={<RefundPolicy />} />
-        <Route path="/track/:awb" element={<TrackOrder />} />
+
+        {/* ══════ PUBLIC ══════ */}
+        <Route path="/"                         element={<Home />} />
+        <Route path="/products"                 element={<Products />} />
+        <Route path="/products/:id"             element={<ProductDetail />} />
+        <Route path="/contact"                  element={<Contact />} />
+        <Route path="/about"                    element={<AboutUs />} />
+        <Route path="/privacy"                  element={<PrivacyPolicy />} />
+        <Route path="/terms"                    element={<Terms />} />
+        <Route path="/refund"                   element={<RefundPolicy />} />
+        <Route path="/blogs/:slug"              element={<BlogDetails />} />
+        <Route path="/address"                  element={<Address />} />
+
+        {/* ✅ Track order — two routes:
+            /track        → empty search box (user types AWB)
+            /track/:awb   → opens tracking directly for that AWB */}
+        <Route path="/track"                    element={<TrackPage />} />
+        <Route path="/track/:awb"               element={<TrackPage />} />
+
+        {/* Payment */}
         <Route path="/payment-success/:orderId" element={<PaymentSuccess />} />
 
+        {/* Auth */}
+        <Route path="/login"                    element={<Login />} />
+        <Route path="/register"                 element={<Register />} />
+        <Route path="/verify-email"             element={<VerifyEmail />} />
+        <Route path="/verify"                   element={<Verify />} />
+        <Route path="/verifyOtp"                element={<VerifyOTP />} />
+        <Route path="/forgotpassword"           element={<ForgotPassword />} />
+        <Route path="/reset-password"           element={<ResetPassword />} />
 
-        {/* Email / OTP (public) */}
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/verify" element={<Verify />} />
-        <Route path="/verifyOtp" element={<VerifyOTP />} />
+        {/* ══════ PROTECTED ══════ */}
+        <Route path="/wishlist"   element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+        <Route path="/account"    element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        <Route path="/cart"       element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+        <Route path="/checkout"   element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+        <Route path="/profile"    element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-        {/* Recovery */}
-        <Route path="/forgotpassword" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/orders"     element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+        <Route path="/order/:id"  element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
 
-        <Route path="/blogs/:slug" element={<BlogDetails />} />
+        {/* ✅ Added OrderConfirmation route (was missing) */}
+        <Route path="/order-confirmation/:orderId" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
 
-        <Route
-          path="/wishlist"
-          element={
-            <ProtectedRoute>
-              <Wishlist />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/paynow/:orderId" element={<ProtectedRoute><PayNow /></ProtectedRoute>} />
 
-        <Route
-          path="/account"
-          element={
-            <ProtectedRoute>
-              <Account />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <Cart />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Protected */}
-        <Route
-          path="/checkout"
-          element={
-            <ProtectedRoute>
-              <Checkout />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/orders"
-          element={
-            <ProtectedRoute>
-              <Orders />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/order/:id"
-          element={
-            <ProtectedRoute>
-              <OrderDetails />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/paynow/:orderId"
-          element={
-            <ProtectedRoute>
-              <PayNow />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* 404 */}
+        {/* ══════ 404 ══════ */}
         <Route
           path="*"
           element={
-            <div className="text-center py-20">
-              <h2 className="text-2xl font-bold text-orange-600">
-                404 - Page Not Found
-              </h2>
-              <p className="text-gray-600 mt-2">
-                The page you’re looking for doesn’t exist.
-              </p>
+            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 gap-4">
+              <p className="text-6xl font-black text-stone-200">404</p>
+              <h2 className="text-xl font-black text-stone-800">Page not found</h2>
+              <p className="text-stone-400 text-sm">The page you're looking for doesn't exist.</p>
+              <a href="/" className="h-10 px-6 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold flex items-center transition-all">
+                Back to Home
+              </a>
             </div>
           }
         />
@@ -174,8 +130,9 @@ function AppRoutes() {
   );
 }
 
-/* ---------------- App Root ---------------- */
-
+/* ─────────────────────────────────────────────
+   APP ROOT
+───────────────────────────────────────────── */
 function App() {
   return (
     <AuthProvider>

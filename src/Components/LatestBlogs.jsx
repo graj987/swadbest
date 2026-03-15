@@ -2,120 +2,121 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "@/api";
 import { getCachedLatestBlogs, setCachedLatestBlogs } from "@/cache/BlogCache";
+import { ArrowRight, BookOpen } from "lucide-react";
+
+function BlogSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="lg:col-span-2 bg-stone-200 rounded-2xl h-80" />
+    </div>
+  );
+}
 
 const LatestBlogs = () => {
-  const [blogs, setBlogs] = useState([]);
+  const [blogs,   setBlogs]   = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const cached = getCachedLatestBlogs();
-    if (cached) {
-      setBlogs(cached);
-      setLoading(false);
-      return;
-    }
-
-    API
-      .get("/api/blogs/latest")
-      .then((res) => {
-        setBlogs(res.data);
-        setCachedLatestBlogs(res.data);
-      })
+    if (cached) { setBlogs(cached); setLoading(false); return; }
+    API.get("/api/blogs/latest")
+      .then((res) => { const d = res.data; setBlogs(Array.isArray(d)?d:[]); setCachedLatestBlogs(Array.isArray(d)?d:[]); })
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return null;
+  if (loading) return (
+    <section className="py-16 px-4">
+      <div className="max-w-5xl mx-auto animate-pulse space-y-4">
+        <div className="h-6 w-48 bg-stone-200 rounded-full" />
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 h-72 bg-stone-200 rounded-2xl" />
+          <div className="space-y-4">
+            {[1,2,3].map(i=><div key={i} className="h-20 bg-stone-200 rounded-xl"/>)}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
   if (!blogs.length) return null;
 
   const featured = blogs[0];
-  const rest = blogs.slice(1);
+  const rest     = blogs.slice(1, 4);
 
+  const fmtDate  = (d) => new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
 
   return (
-    <section className="bg-white py-16 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* HEADER */}
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">
-              📰 Latest News & Blogs
-            </h2>
-            <p className="text-gray-600 mt-1">
-              Learn more about Ayurveda, digestion & healthy living
-            </p>
-          </div>
+    <section className="py-16 px-4 bg-white">
+      <div className="max-w-5xl mx-auto">
 
-          <Link
-            to="/blogs"
-            className="text-orange-600 font-semibold text-sm hover:underline"
-          >
-            View all →
+        {/* Header */}
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-orange-600 font-bold mb-1.5">From our kitchen</p>
+            <h2 className="text-3xl font-black text-stone-900 tracking-tight">Latest Blogs</h2>
+            <p className="text-stone-400 text-sm mt-1">Ayurveda, digestion & healthy living</p>
+          </div>
+          <Link to="/blogs"
+            className="group hidden sm:inline-flex items-center gap-1.5 text-sm font-bold text-orange-600 hover:text-orange-500 transition-colors">
+            View all <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
 
-        {/* GRID */}
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* FEATURED BLOG */}
-          <Link
-            to={`/blogs/${featured.slug}`}
-            className="lg:col-span-2 group bg-orange-50 rounded-2xl overflow-hidden hover:shadow-lg transition"
-          >
-            <img
-              src={featured.image}
-              alt={featured.title}
-              className="w-full h-64 object-cover group-hover:scale-105 transition"
-            />
+        {/* Grid */}
+        <div className="grid lg:grid-cols-3 gap-6">
 
-            <div className="p-6">
-              <p className="text-xs text-gray-500">
-                {new Date(featured.createdAt).toDateString()} •{" "}
-                {featured.readTime}
+          {/* Featured */}
+          <Link to={`/blogs/${featured.slug}`}
+            className="lg:col-span-2 group bg-stone-50 border border-stone-100 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-200">
+            <div className="relative overflow-hidden h-56">
+              <img src={featured.image} alt={featured.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              {featured.category && (
+                <span className="absolute top-3 left-3 text-[10px] font-black uppercase tracking-wider bg-orange-600 text-white px-2.5 py-1 rounded-full">
+                  {featured.category}
+                </span>
+              )}
+            </div>
+            <div className="p-5">
+              <p className="text-[11px] text-stone-400 font-medium">
+                {fmtDate(featured.createdAt)}{featured.readTime && ` · ${featured.readTime}`}
               </p>
-
-              <h3 className="text-2xl font-bold mt-2 text-gray-900">
+              <h3 className="text-xl font-black text-stone-900 mt-1.5 leading-snug group-hover:text-orange-600 transition-colors">
                 {featured.title}
               </h3>
-
-              <p className="text-gray-700 mt-2 line-clamp-2">
-                {featured.excerpt}
-              </p>
-
-              <span className="inline-block mt-4 text-orange-600 font-semibold">
-                Read Article →
-              </span>
+              <p className="text-sm text-stone-500 mt-2 line-clamp-2 leading-relaxed">{featured.excerpt}</p>
+              <div className="inline-flex items-center gap-1.5 mt-4 text-sm font-bold text-orange-600">
+                Read article <ArrowRight className="w-3.5 h-3.5" />
+              </div>
             </div>
           </Link>
 
-          {/* SIDE BLOGS */}
-          <div className="space-y-6">
+          {/* Side list */}
+          <div className="flex flex-col justify-between gap-4">
             {rest.map((blog) => (
-              <Link
-                key={blog._id}
-                to={`/blogs/${blog.slug}`}
-                className="flex gap-4 group"
-              >
-                <img
-                  src={blog.image}
-                  alt={blog.title}
-                  className="w-24 h-24 rounded-xl object-cover group-hover:scale-105 transition"
-                />
-
-                <div>
-                  <p className="text-xs text-gray-500">
-                    {new Date(blog.createdAt).toDateString()} •{" "}
-                    {blog.readTime}
+              <Link key={blog._id} to={`/blogs/${blog.slug}`}
+                className="group flex gap-3 p-3 rounded-xl hover:bg-stone-50 transition-colors border border-transparent hover:border-stone-100">
+                <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-stone-100">
+                  <img src={blog.image} alt={blog.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] text-stone-400 font-medium">
+                    {fmtDate(blog.createdAt)}{blog.readTime && ` · ${blog.readTime}`}
                   </p>
-
-                  <p className="font-semibold text-gray-900 line-clamp-2">
+                  <p className="text-sm font-bold text-stone-800 line-clamp-2 mt-0.5 leading-snug group-hover:text-orange-600 transition-colors">
                     {blog.title}
                   </p>
-
-                  <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                    {blog.excerpt}
-                  </p>
+                  <p className="text-xs text-stone-400 line-clamp-1 mt-0.5">{blog.excerpt}</p>
                 </div>
               </Link>
             ))}
+
+            <Link to="/blogs"
+              className="flex items-center justify-center gap-2 h-10 rounded-xl border border-stone-200 text-sm font-bold text-stone-600 hover:bg-stone-50 hover:border-stone-300 transition-all mt-1">
+              <BookOpen className="w-4 h-4" /> All Articles
+            </Link>
           </div>
         </div>
       </div>
