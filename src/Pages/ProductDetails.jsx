@@ -23,7 +23,9 @@ import {
    SKELETON
 ───────────────────────────────────────────── */
 function Skeleton({ className }) {
-  return <div className={`animate-pulse bg-stone-200 rounded-xl ${className}`} />;
+  return (
+    <div className={`animate-pulse bg-stone-200 rounded-xl ${className}`} />
+  );
 }
 
 function PageSkeleton() {
@@ -39,7 +41,9 @@ function PageSkeleton() {
             <Skeleton className="h-10 w-1/2" />
             <Skeleton className="h-20 w-full" />
             <div className="flex gap-2">
-              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-20 rounded-full" />)}
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10 w-20 rounded-full" />
+              ))}
             </div>
             <Skeleton className="h-12 w-full mt-4" />
           </div>
@@ -53,24 +57,33 @@ function PageSkeleton() {
    TRUST BADGE ROW
 ───────────────────────────────────────────── */
 const TRUST = [
-  { icon: ShieldCheck, label: "FSSAI Certified"     },
-  { icon: Leaf,        label: "No Preservatives"    },
-  { icon: Truck,       label: "Free Delivery ₹499+" },
-  { icon: RotateCcw,   label: "Easy Returns"        },
+  { icon: ShieldCheck, label: "FSSAI Certified" },
+  { icon: Leaf, label: "No Preservatives" },
+  { icon: Truck, label: "Free Delivery ₹499+" },
+  { icon: RotateCcw, label: "Easy Returns" },
 ];
 
 function TrustRow() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-      {TRUST.map(({ icon: Icon, label }) => (
-        <div
-          key={label}
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-100"
-        >
-          <Icon className="w-3.5 h-3.5 text-amber-700 shrink-0" strokeWidth={2} />
-          <span className="text-[11px] font-semibold text-amber-800 leading-tight">{label}</span>
-        </div>
-      ))}
+      {TRUST.map((item) => {
+        const Icon = item.icon;
+
+        return (
+          <div
+            key={item.label}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-100"
+          >
+            <Icon
+              className="w-3.5 h-3.5 text-amber-700 shrink-0"
+              strokeWidth={2}
+            />
+            <span className="text-[11px] font-semibold text-amber-800 leading-tight">
+              {item.label}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -84,13 +97,13 @@ const ProductDetail = () => {
   const { user, getAuthHeader } = useAuth();
   const { refetch } = useCartCount();
 
-  const [product, setProduct]                   = useState(null);
+  const [product, setProduct] = useState(null);
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
-  const [loading, setLoading]                   = useState(true);
-  const [adding, setAdding]                     = useState(false);
-  const [addedFeedback, setAddedFeedback]       = useState(false);
-  const [qty, setQty]                           = useState(1);
-  const [activeImg, setActiveImg]               = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [addedFeedback, setAddedFeedback] = useState(false);
+  const [qty, setQty] = useState(1);
+  const [activeImg, setActiveImg] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -109,13 +122,24 @@ const ProductDetail = () => {
   const variant = product?.variants?.[selectedVariantIndex];
 
   const handleAddToCart = async () => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     if (!variant || variant.stock === 0) return;
     try {
       setAdding(true);
       await API.post(
         "/api/cart/add",
-        { productId: product._id, quantity: qty, variant: { weight: variant.weight, price: variant.price, stock: variant.stock } },
+        {
+          productId: product._id,
+          quantity: qty,
+          variant: {
+            weight: variant.weight,
+            price: variant.price,
+            stock: variant.stock,
+          },
+        },
         { headers: getAuthHeader() },
       );
       refetch?.();
@@ -136,22 +160,28 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center gap-4">
         <XCircle className="w-12 h-12 text-stone-300" />
         <p className="text-stone-500 font-medium">Product not found</p>
-        <button onClick={() => navigate(-1)} className="text-sm text-amber-700 font-semibold hover:underline">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-sm text-amber-700 font-semibold hover:underline"
+        >
           ← Go back
         </button>
       </div>
     );
   }
 
-  const inStock      = variant.stock > 0;
-  const images       = product.images?.length ? product.images : [product.image].filter(Boolean);
-  const hasDiscount  = variant.mrp && variant.mrp > variant.price;
-  const discountPct  = hasDiscount ? Math.round(((variant.mrp - variant.price) / variant.mrp) * 100) : 0;
+  const inStock = variant.stock > 0;
+  const images = product.images?.length
+    ? product.images
+    : [product.image].filter(Boolean);
+  const hasDiscount = variant.mrp && variant.mrp > variant.price;
+  const discountPct = hasDiscount
+    ? Math.round(((variant.mrp - variant.price) / variant.mrp) * 100)
+    : 0;
 
   /* ─────────── RENDER ─────────── */
   return (
     <div className="min-h-screen bg-stone-50 pb-32 md:pb-16">
-
       {/* ── Breadcrumb bar ── */}
       <div className="bg-white border-b border-stone-100 sticky top-0 z-20 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-12 flex items-center gap-2 text-sm text-stone-500">
@@ -163,19 +193,21 @@ const ProductDetail = () => {
             <span className="hidden sm:inline">Back</span>
           </button>
           <span className="text-stone-300">/</span>
-          <span className="text-stone-400 text-xs truncate max-w-[200px]">{product.category}</span>
+          <span className="text-stone-400 text-xs truncate max-w-[200px]">
+            {product.category}
+          </span>
           <span className="text-stone-300">/</span>
-          <span className="text-stone-700 font-semibold text-xs truncate max-w-[200px]">{product.name}</span>
+          <span className="text-stone-700 font-semibold text-xs truncate max-w-[200px]">
+            {product.name}
+          </span>
         </div>
       </div>
 
       {/* ── Main content ── */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-7 pb-10">
         <div className="grid md:grid-cols-2 gap-8 lg:gap-14">
-
           {/* ══════ LEFT: IMAGE PANEL ══════ */}
           <div className="flex flex-col gap-3">
-
             {/* Main image */}
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-white border border-stone-100 shadow-sm">
               {hasDiscount && (
@@ -200,7 +232,11 @@ const ProductDetail = () => {
                     className={`shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all
                       ${activeImg === img ? "border-amber-500 shadow-md shadow-amber-500/20" : "border-stone-200 hover:border-stone-300"}`}
                   >
-                    <SafeImage src={img} alt="" className="w-full h-full object-contain p-1" />
+                    <SafeImage
+                      src={img}
+                      alt=""
+                      className="w-full h-full object-contain p-1"
+                    />
                   </button>
                 ))}
               </div>
@@ -209,7 +245,6 @@ const ProductDetail = () => {
 
           {/* ══════ RIGHT: DETAILS PANEL ══════ */}
           <div className="flex flex-col gap-0">
-
             {/* Category tag */}
             <span className="inline-block self-start text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full mb-3">
               {product.category}
@@ -223,9 +258,14 @@ const ProductDetail = () => {
             {/* Rating row */}
             <div className="flex items-center gap-2 mt-2.5">
               <div className="flex items-center gap-0.5">
-                {[1,2,3,4,5].map((s) => (
-                  <svg key={s} viewBox="0 0 12 12" className={`w-3.5 h-3.5 ${s <= 4 ? "text-amber-400" : "text-stone-200"}`} fill="currentColor">
-                    <path d="M6 1l1.39 2.82L10.5 4.27l-2.25 2.19.53 3.09L6 8.1 3.22 9.55l.53-3.09L1.5 4.27l3.11-.45z"/>
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <svg
+                    key={s}
+                    viewBox="0 0 12 12"
+                    className={`w-3.5 h-3.5 ${s <= 4 ? "text-amber-400" : "text-stone-200"}`}
+                    fill="currentColor"
+                  >
+                    <path d="M6 1l1.39 2.82L10.5 4.27l-2.25 2.19.53 3.09L6 8.1 3.22 9.55l.53-3.09L1.5 4.27l3.11-.45z" />
                   </svg>
                 ))}
               </div>
@@ -243,7 +283,9 @@ const ProductDetail = () => {
               </span>
               {hasDiscount && (
                 <>
-                  <span className="text-base text-stone-400 line-through mb-0.5">₹{variant.mrp}</span>
+                  <span className="text-base text-stone-400 line-through mb-0.5">
+                    ₹{variant.mrp}
+                  </span>
                   <span className="mb-0.5 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
                     Save ₹{variant.mrp - variant.price}
                   </span>
@@ -256,7 +298,9 @@ const ProductDetail = () => {
               {inStock ? (
                 <>
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  <span className="text-xs font-semibold text-emerald-600">In Stock</span>
+                  <span className="text-xs font-semibold text-emerald-600">
+                    In Stock
+                  </span>
                   {variant.stock <= 10 && (
                     <span className="text-xs text-rose-500 font-medium ml-1">
                       · Only {variant.stock} left
@@ -266,14 +310,17 @@ const ProductDetail = () => {
               ) : (
                 <>
                   <XCircle className="w-3.5 h-3.5 text-red-400" />
-                  <span className="text-xs font-semibold text-red-500">Out of Stock</span>
+                  <span className="text-xs font-semibold text-red-500">
+                    Out of Stock
+                  </span>
                 </>
               )}
             </div>
 
             {/* Description */}
             <p className="mt-4 text-sm text-stone-500 leading-relaxed">
-              {product.description || "Premium quality, handcrafted spice blend made with no preservatives."}
+              {product.description ||
+                "Premium quality, handcrafted spice blend made with no preservatives."}
             </p>
 
             {/* Divider */}
@@ -288,15 +335,19 @@ const ProductDetail = () => {
                 {product.variants.map((v, i) => (
                   <button
                     key={i}
-                    onClick={() => { setSelectedVariantIndex(i); setQty(1); }}
+                    onClick={() => {
+                      setSelectedVariantIndex(i);
+                      setQty(1);
+                    }}
                     disabled={v.stock === 0}
                     className={`
                       relative px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all duration-150
-                      ${i === selectedVariantIndex
-                        ? "bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-600/20"
-                        : v.stock === 0
-                          ? "bg-stone-50 text-stone-300 border-stone-100 cursor-not-allowed"
-                          : "bg-white text-stone-700 border-stone-200 hover:border-amber-400 hover:text-amber-700"
+                      ${
+                        i === selectedVariantIndex
+                          ? "bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-600/20"
+                          : v.stock === 0
+                            ? "bg-stone-50 text-stone-300 border-stone-100 cursor-not-allowed"
+                            : "bg-white text-stone-700 border-stone-200 hover:border-amber-400 hover:text-amber-700"
                       }
                     `}
                   >
@@ -313,7 +364,9 @@ const ProductDetail = () => {
 
             {/* Qty selector */}
             <div className="mt-5 flex items-center gap-3">
-              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-stone-400">Qty</p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-stone-400">
+                Qty
+              </p>
               <div className="flex items-center gap-0 rounded-xl border border-stone-200 overflow-hidden bg-white shadow-sm">
                 <button
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
@@ -326,7 +379,9 @@ const ProductDetail = () => {
                   {qty}
                 </span>
                 <button
-                  onClick={() => setQty((q) => Math.min(variant?.stock || 10, q + 1))}
+                  onClick={() =>
+                    setQty((q) => Math.min(variant?.stock || 10, q + 1))
+                  }
                   disabled={qty >= (variant?.stock || 10)}
                   className="w-9 h-9 flex items-center justify-center text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-colors"
                 >
@@ -334,7 +389,10 @@ const ProductDetail = () => {
                 </button>
               </div>
               <span className="text-xs text-stone-400">
-                × ₹{variant.price} = <span className="font-bold text-stone-700">₹{variant.price * qty}</span>
+                × ₹{variant.price} ={" "}
+                <span className="font-bold text-stone-700">
+                  ₹{variant.price * qty}
+                </span>
               </span>
             </div>
 
@@ -346,20 +404,25 @@ const ProductDetail = () => {
                 className={`
                   flex-1 h-12 rounded-xl text-sm font-bold flex items-center justify-center gap-2
                   transition-all duration-200
-                  ${!inStock
-                    ? "bg-stone-100 text-stone-400 cursor-not-allowed"
-                    : addedFeedback
-                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/25"
-                      : "bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-600/25 hover:shadow-amber-500/30 active:scale-[0.99]"
+                  ${
+                    !inStock
+                      ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                      : addedFeedback
+                        ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/25"
+                        : "bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-600/25 hover:shadow-amber-500/30 active:scale-[0.99]"
                   }
                 `}
               >
                 {adding ? (
                   <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                 ) : addedFeedback ? (
-                  <><CheckCircle2 className="w-4 h-4" /> Added to Cart</>
+                  <>
+                    <CheckCircle2 className="w-4 h-4" /> Added to Cart
+                  </>
                 ) : (
-                  <><ShoppingCart className="w-4 h-4" /> Add to Cart</>
+                  <>
+                    <ShoppingCart className="w-4 h-4" /> Add to Cart
+                  </>
                 )}
               </button>
 
@@ -389,7 +452,9 @@ const ProductDetail = () => {
           {/* Price block */}
           <div className="shrink-0">
             <p className="text-[10px] text-stone-400 font-medium">Total</p>
-            <p className="text-base font-black text-stone-900 leading-tight">₹{variant.price * qty}</p>
+            <p className="text-base font-black text-stone-900 leading-tight">
+              ₹{variant.price * qty}
+            </p>
           </div>
 
           <button
@@ -398,20 +463,25 @@ const ProductDetail = () => {
             className={`
               flex-1 h-12 rounded-xl text-sm font-bold flex items-center justify-center gap-2
               transition-all duration-200
-              ${!inStock
-                ? "bg-stone-100 text-stone-400 cursor-not-allowed"
-                : addedFeedback
-                  ? "bg-emerald-500 text-white"
-                  : "bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-600/20 active:scale-[0.98]"
+              ${
+                !inStock
+                  ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                  : addedFeedback
+                    ? "bg-emerald-500 text-white"
+                    : "bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-600/20 active:scale-[0.98]"
               }
             `}
           >
             {adding ? (
               <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
             ) : addedFeedback ? (
-              <><CheckCircle2 className="w-4 h-4" /> Added!</>
+              <>
+                <CheckCircle2 className="w-4 h-4" /> Added!
+              </>
             ) : (
-              <><ShoppingCart className="w-4 h-4" /> Add to Cart</>
+              <>
+                <ShoppingCart className="w-4 h-4" /> Add to Cart
+              </>
             )}
           </button>
 
@@ -424,7 +494,10 @@ const ProductDetail = () => {
           </button>
         </div>
         {/* Safe-area spacer for modern phones */}
-        <div className="h-safe-area-inset-bottom" style={{ height: "env(safe-area-inset-bottom, 0px)" }} />
+        <div
+          className="h-safe-area-inset-bottom"
+          style={{ height: "env(safe-area-inset-bottom, 0px)" }}
+        />
       </div>
     </div>
   );

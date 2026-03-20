@@ -1,3 +1,4 @@
+// src/Layout.jsx
 import { useLocation } from "react-router-dom";
 import Navbar from "@/Components/Navbar";
 import Footer from "@/Components/Footer";
@@ -5,8 +6,7 @@ import BottomNav from "@/Components/BottomNavbar";
 import useCartCount from "@/Hooks/useCartCount";
 
 /* ─────────────────────────────────────────────
-   Paths where Navbar + Footer + BottomNav are hidden.
-   Auth flows get a clean, distraction-free shell.
+   Auth flows — completely hide Navbar/Footer/BottomNav
 ───────────────────────────────────────────── */
 const HIDE_LAYOUT_EXACT = new Set([
   "/login",
@@ -17,10 +17,7 @@ const HIDE_LAYOUT_EXACT = new Set([
   "/reset-password",
 ]);
 
-const HIDE_LAYOUT_PREFIX = [
-  "/verifyOtp",
-  "/verify/",
-];
+const HIDE_LAYOUT_PREFIX = ["/verifyOtp", "/verify/"];
 
 function shouldHideLayout(pathname) {
   if (HIDE_LAYOUT_EXACT.has(pathname)) return true;
@@ -28,11 +25,11 @@ function shouldHideLayout(pathname) {
 }
 
 /* ─────────────────────────────────────────────
-   Paths where the Footer is hidden even on desktop
-   (checkout, payment flows — keep focus on conversion)
+   Footer hidden on conversion/payment pages
 ───────────────────────────────────────────── */
 const HIDE_FOOTER_PREFIX = [
   "/checkout",
+  "/cart",
   "/paynow/",
   "/payment-success/",
 ];
@@ -41,41 +38,62 @@ function shouldHideFooter(pathname) {
   return HIDE_FOOTER_PREFIX.some((p) => pathname.startsWith(p));
 }
 
+/* ─────────────────────────────────────────────
+   BottomNav hidden when the page has its OWN
+   fixed bottom bar (cart / checkout).
+   Avoids double fixed bars stacking on mobile.
+───────────────────────────────────────────── */
+const HIDE_BOTTOMNAV_PREFIX = [
+  "/cart",
+  "/checkout",
+  "/paynow/",
+  "/payment-success/",
+];
+
+function shouldHideBottomNav(pathname) {
+  return HIDE_BOTTOMNAV_PREFIX.some((p) => pathname.startsWith(p));
+}
+
 /* ═══════════════════════════════════════════
    LAYOUT
 ═══════════════════════════════════════════ */
 function Layout({ children }) {
-  const location  = useLocation();
+  const location = useLocation();
   const { cartCount, wishlistCount } = useCartCount();
 
-  const pathname   = location.pathname;
-  const hideLayout = shouldHideLayout(pathname);
-  const hideFooter = hideLayout || shouldHideFooter(pathname);
+  const pathname      = location.pathname;
+  const hideLayout    = shouldHideLayout(pathname);
+  const hideFooter    = hideLayout || shouldHideFooter(pathname);
+  const hideBottomNav = hideLayout || shouldHideBottomNav(pathname);
+
+  /*
+    Bottom padding logic:
+    - Auth pages:          no padding (hideLayout = true)
+    - Cart / Checkout:     no padding here — those pages manage their own
+                           pb-* internally (they have custom fixed bars)
+    - All other pages:     pb-16 on mobile for BottomNav, 0 on desktop
+  */
+  const needsBottomNavPadding = !hideLayout && !hideBottomNav;
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 antialiased">
 
-      {/* ── Navbar ── */}
       {!hideLayout && <Navbar />}
 
-      {/* ── Page content ──
-          pb-16 on mobile reserves space for the BottomNav bar (h-16).
-          On md+ the BottomNav is hidden so no padding needed.       */}
-      <main className={`flex-1 ${!hideLayout ? "pb-16 md:pb-0" : ""}`}>
+      <main className={`flex-1 ${needsBottomNavPadding ? "pb-16 md:pb-0" : ""}`}>
         {children}
       </main>
 
-      {/* ── Footer — desktop only, hidden on conversion pages ── */}
       {!hideFooter && (
         <div className="hidden md:block">
           <Footer />
         </div>
       )}
 
-      {/* ── Bottom nav — mobile only ── */}
-      {!hideLayout && (
+      {!hideBottomNav && (
         <BottomNav cartCount={cartCount} wishlistCount={wishlistCount} />
       )}
+
     </div>
   );
 }

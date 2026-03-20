@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import API from "../api";
 import ProductCard from "../Components/ProductCard";
 import { Search, SlidersHorizontal, X, ChevronDown, Package } from "lucide-react";
@@ -47,7 +47,6 @@ const Products = () => {
   const [category, setCategory] = useState("All");
   const [sort, setSort]         = useState("featured");
   const [sortOpen, setSortOpen] = useState(false);
-  const [filterOpen, setFilterOpen] = useState(false); // mobile drawer
 
   /* ── read URL param ── */
   useEffect(() => {

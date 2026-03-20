@@ -24,7 +24,7 @@ import API from "@/api";
    BADGE
 ───────────────────────────────────────────── */
 const Badge = memo(({ value }) => (
-  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-amber-600 text-white text-[10px] font-black rounded-full flex items-center justify-center leading-none shadow-sm">
+  <span className="absolute -top-1.5 -right-1.5 min-w-4.5 h-4.5 px-1 bg-amber-600 text-white text-[10px] font-black rounded-full flex items-center justify-center leading-none shadow-sm">
     {value > 99 ? "99+" : value}
   </span>
 ));
@@ -200,7 +200,7 @@ function Navbar() {
           {/* ── Desktop Search ── */}
           <div
             ref={searchRef}
-            className="hidden md:flex relative flex-1 max-w-[420px]"
+            className="hidden md:flex relative flex-1 max-w-105"
           >
             <div
               className={`
@@ -387,7 +387,7 @@ function Navbar() {
 
       {/* ══════ MOBILE SEARCH OVERLAY ══════ */}
       {mobileSearch && (
-        <div className="fixed inset-0 z-[60] bg-white flex flex-col">
+        <div className="fixed inset-0 z-60 bg-white flex flex-col">
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-stone-100">
             <button
@@ -457,7 +457,7 @@ function Navbar() {
 
       {/* ══════ MOBILE MENU DRAWER ══════ */}
       {mobileMenu && (
-        <div className="fixed inset-0 z-[55] flex md:hidden">
+        <div className="fixed inset-0 z-55 flex md:hidden">
           {/* backdrop */}
           <div
             className="absolute inset-0 bg-black/30 backdrop-blur-sm"
@@ -465,7 +465,7 @@ function Navbar() {
           />
 
           {/* drawer */}
-          <div className="absolute right-0 top-0 bottom-0 w-[280px] bg-white shadow-2xl flex flex-col overflow-y-auto">
+          <div className="absolute right-0 top-0 bottom-0 w-70 bg-white shadow-2xl flex flex-col overflow-y-auto">
             {/* drawer header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
               <Link to="/" onClick={() => setMobileMenu(false)}>
