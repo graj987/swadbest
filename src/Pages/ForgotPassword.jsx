@@ -52,7 +52,7 @@ export default function ForgotPassword() {
         <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
 
           {/* Orange top accent */}
-          <div className="h-1 bg-gradient-to-r from-orange-600 to-orange-400" />
+          <div className="h-1 bg-linear-to-r from-orange-600 to-orange-400" />
 
           {/* Content */}
           <div className="px-8 pt-8 pb-8">

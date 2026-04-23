@@ -58,7 +58,7 @@ export default function BottomNav({ cartCount = 0, wishlistCount = 0 }) {
                   strokeWidth={active ? 2.5 : 1.8}
                 />
                 {badge > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 bg-orange-600 text-white text-[9px] font-black rounded-full flex items-center justify-center leading-none shadow-sm">
+                  <span className="absolute -top-1.5 -right-1.5 min-w-16 h-4 px-1 bg-orange-600 text-white text-[9px] font-black rounded-full flex items-center justify-center leading-none shadow-sm">
                     {badge > 99 ? "99+" : badge}
                   </span>
                 )}

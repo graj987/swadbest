@@ -191,7 +191,7 @@ const Footer = () => {
                 },
               ].map((item) => {
                 const Icon = item.Icon;
-                const {label,href}=item;
+                const { label, href } = item;
                 <a
                   key={label}
                   href={href}
@@ -311,6 +311,19 @@ const Footer = () => {
                   ),
                 )}
               </div>
+            </div>
+            <div>
+              <p className="text-sm flex items-center gap-2">
+                Crafted by 👨‍💻
+                <a
+                  href="https://your-portfolio-link.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-orange-500 hover:text-amber-300"
+                >
+                  Gautam Raj
+                </a>
+              </p>
             </div>
 
             <div className="md:text-right">

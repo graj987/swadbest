@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import API from "@/api";
 import useAuth from "../Hooks/useAuth";
+import getApiErrorMessage from "../utils/getApiErrorMessage";
 
 /* ─────────────────────────────────────────────
    REUSABLE FIELD WRAPPER
@@ -58,6 +59,9 @@ export default function Login() {
 
   async function onSubmit(e) {
     e.preventDefault();
+
+    if (loading) return; // prevent double submit
+
     setError(null);
 
     if (!form.email.trim() || !form.password.trim()) {
@@ -67,13 +71,27 @@ export default function Login() {
 
     try {
       setLoading(true);
-      const res = await API.post("/api/users/login", form);
 
-      if (!res.data?.success) {
-        setError(res.data?.message || "Login failed.");
+      const res = await API.post("/api/users/login", form, {
+        timeout: 10000,
+        withCredentials: true,
+      });
+
+      // defensive payload checks
+      if (!res?.data) {
+        throw new Error("Empty response from server.");
+      }
+
+      if (!res.data.success) {
+        setError(res.data.message || "Login failed.");
         return;
       }
 
+      if (!res.data.user || !res.data.accessToken) {
+        throw new Error("Invalid authentication response.");
+      }
+
+      // Save auth
       login({
         user: res.data.user,
         accessToken: res.data.accessToken,
@@ -82,12 +100,14 @@ export default function Login() {
 
       navigate("/");
     } catch (err) {
-      const msg = err.response?.data?.message;
-      if (msg?.toLowerCase().includes("verify")) {
-        setError("Your email is not verified. Please check your inbox.");
-      } else {
-        setError(msg || "Server error. Please try again.");
+      // ignore canceled requests
+      if (err.code === "ERR_CANCELED") {
+        return;
       }
+
+      console.error("Login Error:", err);
+
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -124,7 +144,7 @@ export default function Login() {
         />
         {/* glow orb */}
         <div
-          className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full opacity-20 pointer-events-none"
+          className="absolute -top-32 -right-32 w-105 h-105 rounded-full opacity-20 pointer-events-none"
           style={{
             background: "radial-gradient(circle, #fb923c 0%, transparent 70%)",
           }}
@@ -137,7 +157,7 @@ export default function Login() {
               <Leaf className="w-4 h-4 text-amber-300" strokeWidth={2} />
             </div>
             <span className="text-white font-black text-xl tracking-tight">
-              Achwani
+              Swadbest
             </span>
           </div>
         </div>
@@ -148,17 +168,17 @@ export default function Login() {
             <p className="text-xs uppercase tracking-[0.2em] text-amber-400/70 font-semibold">
               Welcome back
             </p>
-            <h2 className="text-[2.6rem] font-black leading-[1.08] text-white">
-              Your pantry
+            <h2 className="text-[1.8rem] font-black leading-[1.08] text-white">
+              We bring the true taste of India
               <br />
-              is waiting
+              to your home with authentic,
               <br />
-              for you.
+              trusted and wholesome products.
             </h2>
           </div>
           <p className="text-white/55 text-sm leading-relaxed max-w-xs">
-            Sign in to track your orders, manage your address book, and reorder
-            your favourite spices in seconds.
+            Sign in to experience authentic Indian taste, shop homemade
+            products, and bring traditional goodness to your kitchen.
           </p>
 
           {/* feature pills */}
@@ -194,14 +214,14 @@ export default function Login() {
 
       {/* ══════ RIGHT FORM PANEL ══════ */}
       <div className="flex-1 flex items-center justify-center px-6 py-14">
-        <div className="w-full max-w-[420px]">
+        <div className="w-full max-w-105">
           {/* Mobile logo */}
           <div className="flex lg:hidden items-center gap-2 mb-10">
             <div className="w-8 h-8 rounded-xl bg-amber-600/10 flex items-center justify-center">
               <Leaf className="w-4 h-4 text-amber-700" strokeWidth={2} />
             </div>
             <span className="font-black text-lg text-stone-800 tracking-tight">
-              Achwani
+              Swadbest
             </span>
           </div>
 
@@ -336,7 +356,7 @@ export default function Login() {
           </div>
 
           {/* Social buttons */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* <div className="grid grid-cols-2 gap-3">
             {[
               {
                 label: "Google",
@@ -396,7 +416,7 @@ export default function Login() {
                 {label}
               </button>
             ))}
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

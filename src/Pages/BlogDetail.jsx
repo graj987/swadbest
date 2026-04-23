@@ -56,7 +56,7 @@ const BlogDetails = () => {
       {blog.image && (
         <div className="w-full bg-gray-100">
           <div className="max-w-5xl mx-auto px-6 py-8">
-            <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden bg-white">
+            <div className="relative w-full `aspect-[16/9]` rounded-2xl overflow-hidden bg-white">
               <img
                 src={blog.image}
                 alt={blog.title}
@@ -119,7 +119,7 @@ const BlogDetails = () => {
                 to={`/blogs/${item.slug}`}
                 className="group border rounded-xl overflow-hidden hover:shadow-lg transition"
               >
-                <div className="aspect-[16/9] overflow-hidden bg-gray-100">
+                <div className="`aspect-[16/9]` overflow-hidden bg-gray-100">
                   <img
                     src={item.image}
                     alt={item.title}
