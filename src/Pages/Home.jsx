@@ -217,13 +217,13 @@ const Home = () => {
 
           {/* Radial glow */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-[560px] h-[560px] rounded-full opacity-20 blur-[100px]"
+            <div className="w-140 h-140 rounded-full opacity-20 blur-[100px]"
               style={{ background: "radial-gradient(circle, #fb923c 0%, transparent 70%)" }}
             />
           </div>
 
           {/* Fine horizontal rule at bottom of hero */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
 
           {/* ── Content grid ── */}
           <div className="relative z-10 h-full min-h-svh grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-0 px-6 md:px-16">
@@ -272,10 +272,10 @@ const Home = () => {
               ref={mountRef}
               className={`
                 relative z-10 mx-auto
-                w-[300px] h-[300px]
-                sm:w-[380px] sm:h-[380px]
-                md:w-[500px] md:h-[500px]
-                lg:w-[600px] lg:h-[600px]
+                w-75 h-75
+                sm:w-95 sm:h-95
+                md:w-125 md:h-125
+                lg:w-150 lg:h-150
                 transition-all duration-1000 ease-out
                 ${heroVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"}
               `}
@@ -286,7 +286,7 @@ const Home = () => {
               className={`hidden md:flex flex-col gap-0 transition-all duration-700 ease-out ${heroVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}
               style={{ transitionDelay: "200ms" }}
             >
-              <div className="w-full max-w-[260px] ml-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
+              <div className="w-full max-w-65 ml-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
                 style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(20px)" }}
               >
                 {/* Panel header */}

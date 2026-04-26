@@ -347,13 +347,13 @@ export default function Login() {
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-3 my-6">
+          {/* <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-stone-200" />
             <span className="text-[11px] text-stone-400 font-medium uppercase tracking-wider">
               or continue with
             </span>
             <div className="flex-1 h-px bg-stone-200" />
-          </div>
+          </div> */}
 
           {/* Social buttons */}
           {/* <div className="grid grid-cols-2 gap-3">

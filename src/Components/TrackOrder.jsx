@@ -5,13 +5,33 @@ import OrderTimeline from "@/Components/OrderTimeline";
 
 /* ---------- normalize status ---------- */
 const normalizeStatus = (s = "") => {
-  s = s.toLowerCase();
+  s = s.toLowerCase().trim();
 
+  /* Final states */
   if (s.includes("delivered")) return "delivered";
-  if (s.includes("out for delivery")) return "out_for_delivery";
-  if (s.includes("transit")) return "in_transit";
-  if (s.includes("shipped") || s.includes("pickup")) return "shipped";
+
+  if (s.includes("out for delivery") || s.includes("ofd"))
+    return "out_for_delivery";
+
+  if (s.includes("in transit") || s.includes("transit")) return "in_transit";
+
+  /* Shiprocket pickup complete */
+  if (
+    s.includes("picked up") ||
+    s.includes("pickup complete") ||
+    s.includes("shipped")
+  )
+    return "picked_up";
+
+  /* Waiting courier pickup */
+  if (s.includes("ready for pickup") || s.includes("waiting pickup"))
+    return "waiting_pickup";
+
+  /* Internal warehouse stage */
+  if (s.includes("packed") || s.includes("created")) return "packing";
+
   if (s.includes("rto")) return "rto";
+
   if (s.includes("cancel")) return "cancelled";
 
   return "created";
@@ -21,14 +41,23 @@ export default function TrackOrder() {
   const { awb } = useParams();
 
   const [events, setEvents] = useState([]);
-  const [status, setStatus] = useState("created");
+  const [status, setStatus] = useState("packing");
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState(null);
+  const [paymentPending, setPaymentPending] = useState(false);
 
   useEffect(() => {
     const fetchTracking = async () => {
       try {
         const res = await API.get(`/api/shiprocket/track/${awb}`);
+
+        const orderPayment = res.data?.order?.paymentStatus;
+
+        if (orderPayment?.toLowerCase() === "pending") {
+          setPaymentPending(true);
+          setStatus("placed");
+          return;
+        }
 
         /* works for BOTH live + cached responses */
         const activities =
@@ -43,17 +72,22 @@ export default function TrackOrder() {
 
         /* ensure correct chronological order */
         const sorted = [...activities].sort(
-          (a, b) => new Date(a.date || a.updated_at) - new Date(b.date || b.updated_at)
+          (a, b) =>
+            new Date(a.date || a.updated_at) - new Date(b.date || b.updated_at),
         );
 
         setEvents(sorted);
 
         const latest = sorted[sorted.length - 1];
-        setStatus(normalizeStatus(latest?.status || latest?.current_status));
+        setStatus(
+          normalizeStatus(
+            latest?.status || latest?.current_status || latest?.activity || "",
+          ),
+        );
 
         setUpdatedAt(new Date());
       } catch (err) {
-        console.warn("Tracking fetch failed",err);
+        console.warn("Tracking fetch failed", err);
         setEvents([]);
       } finally {
         setLoading(false);
@@ -63,7 +97,7 @@ export default function TrackOrder() {
     fetchTracking();
 
     /* poll every 30s — logistics doesn’t need 15s spam */
-    const interval = setInterval(fetchTracking, 30000);
+    const interval = setInterval(fetchTracking, 60000);
     return () => clearInterval(interval);
   }, [awb]);
 
@@ -71,9 +105,7 @@ export default function TrackOrder() {
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-2">
-        Tracking — AWB {awb}
-      </h2>
+      <h2 className="text-2xl font-bold mb-2">Tracking — AWB {awb}</h2>
 
       {updatedAt && (
         <p className="text-xs text-gray-500 mb-4">

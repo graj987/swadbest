@@ -61,7 +61,7 @@ function ProgressBar({ step }) {
               ${!done && !active ? "bg-white border-stone-200" : ""}`}>
               <Icon className={`w-3.5 h-3.5 ${done?"text-white":active?"text-amber-600":"text-stone-300"}`} strokeWidth={2.5} />
             </div>
-            <span className={`text-[10px] font-semibold text-center leading-tight max-w-[60px] ${active?"text-amber-700":done?"text-stone-600":"text-stone-400"}`}>
+            <span className={`text-[10px] font-semibold text-center leading-tight max-w-15 ${active?"text-amber-700":done?"text-stone-600":"text-stone-400"}`}>
               {s.label}
             </span>
           </div>
@@ -101,7 +101,7 @@ function TimelineEvent({ event, isFirst }) {
 
   return (
     <li className="relative flex gap-4 pb-6 last:pb-0">
-      <div className="absolute left-[13px] top-7 bottom-0 w-px bg-stone-100" />
+      <div className="absolute left-3.25 top-7 bottom-0 w-px bg-stone-100" />
       <div className={`relative z-10 mt-0.5 w-7 h-7 rounded-full flex items-center justify-center shrink-0 border-2
         ${isFirst?"bg-amber-500 border-amber-500 shadow-md shadow-amber-500/25":"bg-white border-stone-200"}`}>
         <div className={`w-2 h-2 rounded-full ${isFirst?"bg-white":"bg-stone-300"}`} />

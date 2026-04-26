@@ -60,7 +60,7 @@ function ProgressStepper({ step }) {
               ${!done && !active ? "bg-white border-stone-200" : ""}`}>
               <Icon className={`w-3.5 h-3.5 ${done?"text-white":active?"text-orange-500":"text-stone-300"}`} strokeWidth={2.5} />
             </div>
-            <span className={`hidden sm:block text-[10px] font-semibold text-center leading-tight max-w-[56px]
+            <span className={`hidden sm:block text-[10px] font-semibold text-center leading-tight max-w-14
               ${active?"text-orange-600":done?"text-stone-600":"text-stone-400"}`}>{item.label}</span>
           </div>
         );
@@ -82,7 +82,7 @@ function TrackEvent({ event, isFirst }) {
   const text  = event.activity || event.message || event.status || "Update";
   return (
     <li className="relative flex gap-4 pb-5 last:pb-0">
-      <div className="absolute left-[13px] top-7 bottom-0 w-px bg-stone-100" />
+      <div className="absolute left-3.25 top-7 bottom-0 w-px bg-stone-100" />
       <div className={`relative z-10 mt-0.5 w-7 h-7 rounded-full flex items-center justify-center shrink-0 border-2
         ${isFirst?"bg-orange-500 border-orange-500 shadow-md shadow-orange-500/25":"bg-white border-stone-200"}`}>
         <div className={`w-2 h-2 rounded-full ${isFirst?"bg-white":"bg-stone-300"}`} />

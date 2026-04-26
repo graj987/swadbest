@@ -145,7 +145,7 @@ const Register = () => {
         />
         {/* glow orb */}
         <div
-          className="absolute -bottom-24 -left-24 w-[380px] h-[380px] rounded-full opacity-30 pointer-events-none"
+          className="absolute -bottom-24 -left-24 w-95 h-95 rounded-full opacity-30 pointer-events-none"
           style={{
             background: "radial-gradient(circle, #fb923c 0%, transparent 70%)",
           }}
@@ -213,7 +213,7 @@ const Register = () => {
 
       {/* ══════ RIGHT FORM PANEL ══════ */}
       <div className="flex-1 flex items-center justify-center px-6 py-14">
-        <div className="w-full max-w-[420px]">
+        <div className="w-full max-w-105">
           {/* Mobile logo */}
           <div className="flex lg:hidden items-center gap-2 mb-10">
             <div className="w-8 h-8 rounded-xl bg-amber-600/10 flex items-center justify-center">

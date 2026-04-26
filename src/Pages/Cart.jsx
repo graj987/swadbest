@@ -147,7 +147,7 @@ const Cart = () => {
   const fetchCart = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const { data } = await API.get("/api/cart", { headers: getAuthHeader() });
+      const { data } = await API.get("/api/cart/counts", { headers: getAuthHeader() });
       const normalized = (data.items || []).map((i) => ({
         ...i,
         variantIndex:
