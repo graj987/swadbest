@@ -4,7 +4,7 @@ import useAuth from "@/Hooks/useAuth";
 import { CART_UPDATED_EVENT } from "@/utils/CartEvent";
 
 export default function useCartCount({ enabled = true } = {}) {
-  const { getAuthHeader, isAuthenticated, logout } = useAuth();
+  const { getAuthHeader, isAuthenticated } = useAuth();
 
   const [counts, setCounts] = useState({
     cartCount: 0,

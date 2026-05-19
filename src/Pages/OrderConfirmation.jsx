@@ -121,7 +121,7 @@ const OrderConfirmation = () => {
 
         {/* ── Success hero card ── */}
         <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
-          <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-600" />
+          <div className="h-1.5 bg-linear-to-r from-emerald-400 to-emerald-600" />
 
           <div className="px-6 py-7 text-center">
             <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-4 shadow-sm">

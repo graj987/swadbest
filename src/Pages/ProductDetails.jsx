@@ -193,11 +193,11 @@ const ProductDetail = () => {
             <span className="hidden sm:inline">Back</span>
           </button>
           <span className="text-stone-300">/</span>
-          <span className="text-stone-400 text-xs truncate max-w-[200px]">
+          <span className="text-stone-400 text-xs truncate max-w-50">
             {product.category}
           </span>
           <span className="text-stone-300">/</span>
-          <span className="text-stone-700 font-semibold text-xs truncate max-w-[200px]">
+          <span className="text-stone-700 font-semibold text-xs truncate max-w-50">
             {product.name}
           </span>
         </div>

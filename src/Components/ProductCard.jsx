@@ -1,15 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import API from "@/api";
 import useAuth from "@/Hooks/useAuth";
-import useCartCount from "@/Hooks/useCartCount";
 import { useState } from "react";
 import { emitCartUpdate } from "@/utils/CartEvent";
 import { Heart, ShoppingCart, CheckCircle2 } from "lucide-react";
+import SafeImage from "./SafeImage";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { user, getAuthHeader, isAuthenticated } = useAuth();
-  const { refetch } = useCartCount({ enabled: isAuthenticated });
+  const { user, getAuthHeader} = useAuth();
 
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [isAdding,   setIsAdding]   = useState(false);
@@ -36,7 +35,6 @@ export default function ProductCard({ product }) {
         { productId: product._id, quantity: 1, variant: { weight: variant.weight, price: variant.price, stock: variant.stock } },
         { headers: getAuthHeader() }
       );
-      refetch?.();
       setAdded(true);
       emitCartUpdate();
       setTimeout(() => setAdded(false), 1800);
@@ -65,15 +63,29 @@ export default function ProductCard({ product }) {
   };
 
   return (
-    <div className="group relative bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+    <div className="group relative bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
 
       {/* ── IMAGE ── */}
       <Link to={`/products/${product._id}`} className="block relative aspect-square bg-stone-50 overflow-hidden">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-contain p-3 transition-transform duration-500 group-hover:scale-105"
-        />
+        <SafeImage
+  src={product.image}
+  width={300}
+  height={300}
+  sizes="
+    (max-width: 640px) 50vw,
+    (max-width: 1024px) 33vw,
+    300px
+  "
+  alt={product.name}
+  className="
+    w-full h-full
+    object-contain
+    p-3
+    transition-transform
+    duration-500
+    group-hover:scale-105
+  "
+/>
 
         {/* Discount badge */}
         {hasDiscount && (
@@ -84,7 +96,7 @@ export default function ProductCard({ product }) {
 
         {/* Out of stock overlay */}
         {!inStock && (
-          <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center">
+          <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
             <span className="text-[11px] font-black uppercase tracking-widest text-stone-500 bg-stone-100 border border-stone-200 px-3 py-1.5 rounded-full">
               Out of Stock
             </span>

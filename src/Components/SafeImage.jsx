@@ -2,12 +2,17 @@ import { useEffect, useRef, useState } from "react";
 
 function SafeImage({
   src,
+  srcSet,
+  sizes,
+  width,
+  height,
   alt = "",
   className = "",
   fallback = "/fallback.jpg",
   useProxy = false,
   proxyFn = (u) => `/img-proxy?u=${encodeURIComponent(u)}`,
   rootMargin = "200px",
+  priority = false,
 }) {
   const imgRef = useRef(null);
   const triedProxy = useRef(false);
@@ -62,18 +67,23 @@ function SafeImage({
     <div ref={imgRef} className={className}>
       {currentSrc ? (
         <img
-          src={currentSrc}
-          alt={alt}
-          loading="lazy"
-          decoding="async"
-          onLoad={() => setLoaded(true)}
-          onError={handleError}
-          className="w-full h-full object-cover"
-          style={{
-            opacity: loaded ? 1 : 0,
-            transition: "opacity 0.25s ease",
-          }}
-        />
+  src={currentSrc}
+  srcSet={srcSet}
+  sizes={sizes}
+  width={width}
+  height={height}
+  alt={alt}
+  loading={priority ? "eager" : "lazy"}
+  fetchPriority={priority ? "high" : "auto"}
+  decoding="async"
+  onLoad={() => setLoaded(true)}
+  onError={handleError}
+  className="w-full h-full object-cover"
+  style={{
+    opacity: loaded ? 1 : 0,
+    transition: "opacity 0.25s ease",
+  }}
+/>
       ) : (
         <div className="w-full h-full bg-gray-200 animate-pulse rounded" />
       )}

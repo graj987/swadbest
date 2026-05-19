@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import API from "@/api";
-import Lottie from "lottie-react";
-import successAnimation from "@/assets/success.json";
 import {
   CheckCircle2,
   Package,
@@ -17,23 +15,62 @@ import {
   Check,
 } from "lucide-react";
 
-const fmt = (v) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(v || 0);
+/* Construct the formatter ONCE, not per call. */
+const INR = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+const fmt = (v) => INR.format(v || 0);
 
-/* ── copy hook ── */
+/* ── leak-safe copy hook ── */
 function useCopy(text) {
   const [copied, setCopied] = useState(false);
+  const timer = useRef(null);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
   const copy = () => {
-    navigator.clipboard?.writeText(text).then(() => {
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 2000);
     });
   };
   return [copied, copy];
+}
+
+/* ── Lightweight success mark: replaces lottie-react entirely.
+   Pure SVG + CSS (transform/opacity/stroke only). No layout,
+   no filters, ~0 KB JS. Respects reduced-motion. ── */
+function SuccessMark() {
+  return (
+    <div className="w-28 h-28 flex items-center justify-center" aria-hidden="true">
+      <style>{`
+        @keyframes sb-ring { from { transform: scale(.4); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+        @keyframes sb-tick { to { stroke-dashoffset: 0 } }
+        .sb-ring { transform-origin: center; animation: sb-ring .4s ease-out both }
+        .sb-tick { stroke-dasharray: 28; stroke-dashoffset: 28; animation: sb-tick .35s .28s ease-out forwards }
+        @media (prefers-reduced-motion: reduce) {
+          .sb-ring { animation: none; opacity: 1 }
+          .sb-tick { animation: none; stroke-dashoffset: 0 }
+        }
+      `}</style>
+      <svg viewBox="0 0 52 52" className="w-24 h-24">
+        <circle className="sb-ring" cx="26" cy="26" r="25" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="2" />
+        <path
+          className="sb-tick"
+          fill="none"
+          stroke="#10b981"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16 27 l7 7 l14 -15"
+        />
+      </svg>
+    </div>
+  );
 }
 
 /* ═══════════════════════════════════════════
@@ -51,26 +88,29 @@ const PaymentSuccess = () => {
   const [copiedId, copyId] = useCopy(order?._id ?? "");
 
   useEffect(() => {
-    document.title = "Payment Successful | Achwani";
+    let alive = true;
     const load = async () => {
       try {
         const res = await API.get(`/api/orders/${orderId}`);
         const data = res.data?.data;
         if (!data || data.paymentStatus !== "paid") throw new Error("Payment not confirmed");
-        setOrder(data);
+        if (alive) setOrder(data);
       } catch {
-        setError("Payment verification failed.");
+        if (alive) setError("Payment verification failed.");
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
     load();
+    return () => { alive = false; };
   }, [orderId]);
 
   /* ── states ── */
   if (loading) {
     return (
       <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center gap-4">
+        {/* React 19 hoists <title> to <head> — no effect needed */}
+        <title>Payment Successful | Achwani</title>
         <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
         <p className="text-sm text-stone-500 font-medium">Confirming your payment…</p>
       </div>
@@ -108,6 +148,7 @@ const PaymentSuccess = () => {
   /* ─────────── RENDER ─────────── */
   return (
     <div className="min-h-screen bg-stone-50 pb-16">
+      <title>Payment Successful | Achwani</title>
 
       {/* ── Top bar ── */}
       <div className="bg-white border-b border-stone-100 shadow-sm">
@@ -129,15 +170,8 @@ const PaymentSuccess = () => {
           <div className="h-1.5 w-full bg-gradient-to-r from-emerald-400 to-emerald-600" />
 
           <div className="px-6 pt-6 pb-5 text-center">
-            {/* Lottie / fallback icon */}
             <div className="flex justify-center mb-3">
-              {successAnimation ? (
-                <Lottie animationData={successAnimation} loop={false} className="w-28 h-28" />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-emerald-50 border-4 border-emerald-100 flex items-center justify-center">
-                  <CheckCircle2 className="w-10 h-10 text-emerald-500" strokeWidth={1.8} />
-                </div>
-              )}
+              <SuccessMark />
             </div>
 
             <h1 className="text-2xl font-black text-stone-900">Payment Successful!</h1>

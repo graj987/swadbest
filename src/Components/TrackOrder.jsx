@@ -44,7 +44,7 @@ export default function TrackOrder() {
   const [status, setStatus] = useState("packing");
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState(null);
-  const [paymentPending, setPaymentPending] = useState(false);
+  const [ setPaymentPending] = useState(false);
 
   useEffect(() => {
     const fetchTracking = async () => {
@@ -99,7 +99,7 @@ export default function TrackOrder() {
     /* poll every 30s — logistics doesn’t need 15s spam */
     const interval = setInterval(fetchTracking, 60000);
     return () => clearInterval(interval);
-  }, [awb]);
+  }, [awb, setPaymentPending]);
 
   if (loading) return <p className="p-6">Loading tracking…</p>;
 

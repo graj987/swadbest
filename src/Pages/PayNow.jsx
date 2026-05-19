@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import API from "@/api";
 import useAuth from "../Hooks/useAuth";
+import loadRazorpay from "@/utils/loadRozarpay";
 import {
   ShieldCheck,
   MapPin,
@@ -66,18 +67,14 @@ const PayNow = () => {
     }
   }, [orderId, logout, navigate]);
 
-  useEffect(() => { loadOrder(); }, [loadOrder]);
+  useEffect(() => {
+  loadOrder();
+
+  loadRazorpay();
+}, [loadOrder]);
 
   /* ── razorpay ── */
-  const ensureRazorpay = () =>
-    new Promise((resolve) => {
-      if (window.Razorpay) return resolve(true);
-      const s = document.createElement("script");
-      s.src = "https://checkout.razorpay.com/v1/checkout.js";
-      s.onload = () => resolve(true);
-      s.onerror = () => resolve(false);
-      document.body.appendChild(s);
-    });
+
 
   const startPayment = async () => {
     if (!order?._id || paying) return;
@@ -87,7 +84,7 @@ const PayNow = () => {
       setPaying(true);
       setError("");
 
-      const loaded = await ensureRazorpay();
+      const loaded = await loadRazorpay();
       if (!loaded) throw new Error("Payment gateway failed to load. Please refresh.");
 
       const key = import.meta.env.VITE_RZ_KEY_ID;

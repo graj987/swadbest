@@ -3,9 +3,9 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "@/api";
 import useAuth from "@/Hooks/useAuth";
-import useCartCount from "@/Hooks/useCartCount";
-import { emitCartUpdate } from "@/utils/CartEvent";
 import SafeImage from "@/Components/SafeImage";
+import useCart
+from "@/context/useCart";
 import {
   Minus, Plus, Trash2, ShoppingBag, ArrowRight, ArrowLeft,
   Truck, Package, Tag, X, AlertCircle, ShieldCheck, Lock,
@@ -134,8 +134,9 @@ function QtyBtn({ children, onClick, disabled, size = "md" }) {
 ═══════════════════════════════════════════ */
 const Cart = () => {
   const navigate = useNavigate();
+  const { refreshCart } =
+  useCart();
   const { getAuthHeader, isAuthenticated } = useAuth();
-  const { refetch } = useCartCount({ enabled: isAuthenticated });
 
   const [cart,           setCart]           = useState([]);
   const [loading,        setLoading]        = useState(true);
@@ -194,11 +195,11 @@ const Cart = () => {
             ? { ...i, quantity: qty } : i
         )
       );
-      refetch?.();
+      refreshCart();
     } finally {
       setUpdatingKey(null);
     }
-  }, [cart, getAuthHeader, refetch]);
+  }, [cart, getAuthHeader, refreshCart]);
 
   /* ── Remove item ── */
   const removeItem = useCallback(async (productId, weight) => {
@@ -217,12 +218,11 @@ const Cart = () => {
       setCart((prev) =>
         prev.filter((i) => !(i.product._id === productId && i.variant.weight === weight))
       );
-      refetch?.();
-      emitCartUpdate();
+      refreshCart();
     } finally {
       setUpdatingKey(null);
     }
-  }, [cart, getAuthHeader, refetch]);
+  }, [cart, getAuthHeader, refreshCart]);
 
   /* ── Clear cart ── */
   const clearCart = useCallback(async () => {
@@ -230,13 +230,12 @@ const Cart = () => {
     try {
       await API.delete("/api/cart/clear", { headers: getAuthHeader() });
       setCart([]);
-      refetch?.();
-      emitCartUpdate();
+      refreshCart();
       setShowClearModal(false);
     } finally {
       setClearing(false);
     }
-  }, [getAuthHeader, refetch]);
+  }, [getAuthHeader, refreshCart]);
 
   /* ─────────── GATE: not authenticated ─────────── */
   if (!isAuthenticated) return (
@@ -302,7 +301,7 @@ const Cart = () => {
         style={{ background: "linear-gradient(135deg,#431407 0%,#7c2d12 50%,#c2410c 100%)" }}>
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3svg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3 width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
             backgroundSize: "180px",
           }}
         />

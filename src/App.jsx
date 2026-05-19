@@ -1,5 +1,5 @@
 // src/App.jsx
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import Layout from "./Layout/Layout";
@@ -10,43 +10,38 @@ import AuthProvider from "./context/AuthProvider";
 import useAuth from "./Hooks/useAuth";
 
 // Pages
-import Home from "./Pages/Home";
-import Products from "./Pages/Products";
-import ProductDetail from "./Pages/ProductDetails";
-import Cart from "./Pages/Cart";
-import Checkout from "./Pages/Checkout/Checkout";
-import Orders from "./Pages/Orders";
-import OrderDetails from "./Pages/OrderDetails";
-import OrderConfirmation from "./Pages/OrderConfirmation";
-import Profile from "./Pages/Profile";
-import Contact from "./Pages/Contact";
-import Login from "./Pages/Login";
-import Register from "./Pages/Register";
-import PayNow from "./Pages/PayNow";
-import Account from "./Pages/Account";
-import Address from "./Pages/Address";
+const Home = lazy(() => import("./Pages/Home"));
+const Products = lazy(() => import("./Pages/Products"));
+const ProductDetail = lazy(() => import("./Pages/ProductDetails"));
+const Cart = lazy(() => import("./Pages/Cart"));
+const Checkout = lazy(() => import("./Pages/Checkout/Checkout"));
+const Orders = lazy(() => import("./Pages/Orders"));
+const OrderDetails = lazy(() => import("./Pages/OrderDetails"));
+const OrderConfirmation = lazy(() => import("./Pages/OrderConfirmation"));
+const Profile = lazy(() => import("./Pages/Profile"));
+const Contact = lazy(() => import("./Pages/Contact"));
+const Login = lazy(() => import("./Pages/Login"));
+const Register = lazy(() => import("./Pages/Register"));
+const PayNow = lazy(() => import("./Pages/PayNow"));
+const Account = lazy(() => import("./Pages/Account"));
+const Address = lazy(() => import("./Pages/Address"));
 
-// Auth / Recovery
-import ForgotPassword from "./Pages/ForgotPassword";
-import ResetPassword from "./Pages/ResetPassword";
+const ForgotPassword = lazy(() => import("./Pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./Pages/ResetPassword"));
 
-// Email / OTP
-import VerifyEmail from "./Pages/VerifyEmail";
-import Verify from "./Pages/Verify";
-import VerifyOTP from "./Pages/VerifyOTP";
+const VerifyEmail = lazy(() => import("./Pages/VerifyEmail"));
+const Verify = lazy(() => import("./Pages/Verify"));
+const VerifyOTP = lazy(() => import("./Pages/VerifyOTP"));
 
-// Other pages
-import Wishlist from "./Pages/Wishlist";
-import AboutUs from "./Pages/About";
-import PrivacyPolicy from "./Pages/PrivacyPolicy";
-import Terms from "./Pages/Terms";
-import RefundPolicy from "./Pages/Refund";
-import BlogDetails from "./Pages/BlogDetail";
-import PaymentSuccess from "./Pages/PaymentSuccess";
+const Wishlist = lazy(() => import("./Pages/Wishlist"));
+const AboutUs = lazy(() => import("./Pages/About"));
+const PrivacyPolicy = lazy(() => import("./Pages/PrivacyPolicy"));
+const Terms = lazy(() => import("./Pages/Terms"));
+const RefundPolicy = lazy(() => import("./Pages/Refund"));
+const BlogDetails = lazy(() => import("./Pages/BlogDetail"));
+const PaymentSuccess = lazy(() => import("./Pages/PaymentSuccess"));
 
-// ✅ TrackPage is the standalone tracking PAGE (uses TrackOrder component internally)
-// ❌ Do NOT import TrackOrder (the component) here — it's used inside TrackPage, not as a route
-import TrackPage from "./Pages/TrackPage";
+const TrackPage = lazy(() => import("./Pages/TrackPage"));
 
 /* ─────────────────────────────────────────────
    ROUTES
@@ -64,6 +59,13 @@ function AppRoutes() {
 
   return (
     <Layout>
+       <Suspense
+    fallback={
+      <div className="min-h-screen flex items-center justify-center bg-orange-50">
+        <Loader />
+      </div>
+    }
+  >
       <Routes>
 
         {/* ══════ PUBLIC ══════ */}
@@ -126,6 +128,7 @@ function AppRoutes() {
           }
         />
       </Routes>
+      </Suspense>
     </Layout>
   );
 }
