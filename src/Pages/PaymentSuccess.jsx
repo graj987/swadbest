@@ -167,7 +167,7 @@ const PaymentSuccess = () => {
         <div className="bg-white border border-stone-100 rounded-2xl shadow-sm overflow-hidden">
 
           {/* Green top stripe */}
-          <div className="h-1.5 w-full bg-gradient-to-r from-emerald-400 to-emerald-600" />
+          <div className="h-1.5 w-full bg-linear-to-r from-emerald-400 to-emerald-600" />
 
           <div className="px-6 pt-6 pb-5 text-center">
             <div className="flex justify-center mb-3">
@@ -201,7 +201,7 @@ const PaymentSuccess = () => {
             {order.razorpay_payment_id && (
               <div className="flex items-center justify-between px-5 py-3">
                 <span className="text-xs text-stone-400 font-medium">Payment Ref</span>
-                <span className="text-xs font-mono text-stone-500 truncate max-w-[160px]">
+                <span className="text-xs font-mono text-stone-500 truncate max-w-40">
                   {order.razorpay_payment_id}
                 </span>
               </div>
