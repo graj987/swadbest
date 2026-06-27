@@ -172,67 +172,22 @@ const Home = () => {
 
   /* ─────────── RENDER ─────────── */
   return (
+    <>
     <Helmet>
-  <title>
-    Swadbest | Handmade Indian Food
-  </title>
-
-  <meta
-    name="description"
-    content="
-      Authentic handmade Indian
-      Achwani and traditional
-      homemade foods delivered
-      fresh across India.
-    "
-  />
-
-  <meta
-    name="keywords"
-    content="
-      handmade food,
-      achwani,
-      traditional Indian food,
-      homemade snacks,
-      Swadbest
-    "
-  />
-
-  <meta
-    property="og:title"
-    content="Swadbest"
-  />
-
-  <meta
-    property="og:description"
-    content="
-      Authentic handmade Indian
-      Achwani and traditional foods.
-    "
-  />
-
-  <meta
-    property="og:image"
-    content="
-      https://swadbest.com/img/heroJar.webp
-    "
-  />
-
-  <meta
-    property="og:url"
-    content="https://swadbest.com"
-  />
-
-  <meta
-    name="twitter:card"
-    content="summary_large_image"
-  />
-
-  <link
-    rel="canonical"
-    href="https://swadbest.com"
-  />
-</Helmet>,
+      <title>Swadbest | Authentic Handmade Indian Food</title>
+      <meta name="description" content="Authentic handmade Indian Achwani and traditional homemade foods delivered fresh across India. No preservatives, FSSAI certified." />
+      <meta name="keywords" content="handmade food, achwani, traditional Indian food, homemade snacks, Swadbest, ayurvedic food" />
+      <meta property="og:title" content="Swadbest | Authentic Handmade Indian Food" />
+      <meta property="og:description" content="Authentic handmade Indian Achwani and traditional foods. No preservatives, FSSAI certified." />
+      <meta property="og:image" content="https://swadbest.com/img/heroJar.webp" />
+      <meta property="og:url" content="https://swadbest.com" />
+      <meta property="og:type" content="website" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Swadbest | Authentic Handmade Indian Food" />
+      <meta name="twitter:description" content="Authentic handmade Indian Achwani and traditional foods. No preservatives, FSSAI certified." />
+      <meta name="twitter:image" content="https://swadbest.com/img/heroJar.webp" />
+      <link rel="canonical" href="https://swadbest.com" />
+    </Helmet>
     <main className="bg-stone-50 text-stone-800 font-[system-ui]">
 
       {/* ══════════════════════ HERO ══════════════════════ */}
@@ -322,7 +277,7 @@ const Home = () => {
   (max-width: 1024px) 700px,
   1200px
 "
-              alt="swadbest"
+              alt="Swadbest Achwani — authentic handmade Indian spice jar"
               width="1200"
               height="1200"
               fetchpriority="high"
@@ -510,6 +465,7 @@ const Home = () => {
       <LazySection className="bg-stone-50 border-t border-stone-100" minHeight={320}><InstagramFollow /></LazySection>
 
     </main>
+    </>
   );
 };
 

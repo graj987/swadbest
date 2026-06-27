@@ -60,7 +60,9 @@ const Products = () => {
     const fetchProducts = async () => {
       try {
         const res = await API.get("/api/products");
-        setProducts(Array.isArray(res.data) ? res.data : []);
+        // Backend returns { success, data, pagination } or legacy array
+        const list = res.data?.data ?? res.data;
+        setProducts(Array.isArray(list) ? list : []);
       } catch {
         setError("Failed to load products. Please try again.");
       } finally {
